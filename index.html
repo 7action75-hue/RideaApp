@@ -1,0 +1,2500 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RIDEAForge v0.2 — Parcours BA pour projets RIDEA Wallonie</title>
+<style>
+  :root {
+    --navy: #1F3A5F;
+    --navy-d: #14263F;
+    --gold: #C99700;
+    --gold-l: #E5B838;
+    --green: #2D6A4F;
+    --green-l: #40916C;
+    --plum: #6B2D5C;
+    --ink: #1A1A1A;
+    --ink-2: #4A4A4A;
+    --ink-3: #757575;
+    --paper: #FFFFFF;
+    --cream: #F7F4ED;
+    --cream-d: #EFEAE0;
+    --line: #E5E0D0;
+    --line-2: #D9D3C1;
+    --warn: #B45309;
+    --danger: #9D174D;
+    --r: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+  h1, h2, h3, h4, h5, h6 { font-family: Georgia, "Times New Roman", serif; }
+
+  .app { display: grid; grid-template-rows: 64px 1fr; min-height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 28px;
+    background: var(--navy);
+    color: #fff;
+    border-bottom: 3px solid var(--gold);
+  }
+  .brand { display: flex; align-items: center; gap: 14px; font-weight: 600; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 7px;
+    background: var(--gold); color: var(--navy);
+    display: grid; place-items: center;
+    font-family: Georgia, serif;
+    font-weight: 700; font-size: 17px;
+  }
+  .brand-name { font-family: Georgia, serif; font-size: 20px; letter-spacing: 0.01em; }
+  .brand-tag { color: var(--gold); font-size: 12px; padding-left: 14px; border-left: 1px solid rgba(255,255,255,0.18); font-style: italic; }
+  .spacer { flex: 1; }
+
+  .top-progress {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 12px; color: rgba(255,255,255,0.7);
+  }
+  .top-progress .bar {
+    width: 180px; height: 6px; background: rgba(255,255,255,0.15);
+    border-radius: 3px; overflow: hidden;
+  }
+  .top-progress .bar-fill {
+    height: 100%; background: var(--gold); transition: width 0.3s;
+  }
+  .icon-btn {
+    background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff;
+    padding: 7px 14px; border-radius: var(--r); font-size: 12px;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.08); }
+
+  .shell { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 64px); }
+
+  .sidebar {
+    background: var(--paper); border-right: 1px solid var(--line);
+    padding: 20px 14px; overflow-y: auto;
+  }
+  .side-heading {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-3); margin: 12px 10px 10px; font-weight: 700;
+  }
+  .phase-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px; border-radius: var(--r);
+    cursor: pointer; user-select: none;
+    margin-bottom: 4px;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .phase-item:hover { background: var(--cream-d); }
+  .phase-item.active {
+    background: var(--cream);
+    border: 1px solid var(--line);
+    box-shadow: 0 1px 3px rgba(31,58,95,0.06);
+  }
+  .phase-item.locked { opacity: 0.42; cursor: not-allowed; }
+  .phase-item.locked:hover { background: transparent; }
+  .phase-num {
+    flex-shrink: 0;
+    width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: Georgia, serif;
+    font-weight: 700; font-size: 13px;
+    background: var(--line-2); color: var(--ink-2);
+  }
+  .phase-item.done .phase-num { background: var(--green); color: #fff; }
+  .phase-item.active .phase-num { background: var(--navy); color: var(--gold); }
+  .phase-item.locked .phase-num { background: var(--cream-d); color: var(--ink-3); }
+  .phase-body { flex: 1; min-width: 0; }
+  .phase-title { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.3; }
+  .phase-sub { font-size: 11px; color: var(--ink-3); margin-top: 3px; line-height: 1.35; }
+  .phase-item.locked .phase-title { color: var(--ink-3); }
+  .phase-item.done .phase-title::after { content: ' ✓'; color: var(--green); }
+  .lock-icon { position: absolute; top: 14px; right: 12px; color: var(--ink-3); font-size: 12px; }
+
+  .main {
+    padding: 40px 60px 80px;
+    overflow-y: auto;
+    max-width: 980px;
+  }
+
+  .breadcrumb {
+    font-size: 12px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .breadcrumb .b-sep { margin: 0 8px; opacity: 0.4; }
+  .breadcrumb .b-current { color: var(--gold); }
+
+  .phase-hero {
+    background: linear-gradient(135deg, var(--navy) 0%, #2A4B75 100%);
+    color: #fff;
+    padding: 36px 40px;
+    border-radius: var(--r);
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    border-top: 4px solid var(--gold);
+  }
+  .phase-hero .hero-num {
+    position: absolute; top: 20px; right: 24px;
+    font-family: Georgia, serif;
+    font-size: 90px; font-weight: 700;
+    color: rgba(201, 151, 0, 0.15);
+    line-height: 1;
+  }
+  .phase-hero h1 {
+    font-family: Georgia, serif;
+    font-size: 32px; font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .phase-hero .subtitle {
+    font-size: 15px; color: var(--gold-l);
+    margin-bottom: 20px; font-style: italic;
+  }
+  .phase-hero .lede {
+    font-size: 14px; opacity: 0.9;
+    max-width: 680px; line-height: 1.6;
+  }
+  .phase-hero .meta {
+    display: flex; gap: 20px; margin-top: 24px;
+    font-size: 12px; color: rgba(255,255,255,0.75);
+  }
+  .phase-hero .meta span strong { color: var(--gold); font-weight: 600; }
+
+  .section-eyebrow {
+    font-size: 11px; color: var(--plum);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .lesson h2 {
+    font-family: Georgia, serif;
+    font-size: 26px;
+    color: var(--navy);
+    margin: 40px 0 14px;
+    letter-spacing: -0.01em;
+    font-weight: 700;
+  }
+  .lesson h3 {
+    font-family: Georgia, serif;
+    font-size: 19px;
+    color: var(--navy);
+    margin: 28px 0 10px;
+    font-weight: 600;
+  }
+  .lesson p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink-2);
+    margin: 0 0 14px;
+  }
+  .lesson ul, .lesson ol {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink-2);
+    padding-left: 22px;
+  }
+  .lesson li { margin-bottom: 6px; }
+  .lesson strong { color: var(--ink); font-weight: 600; }
+
+  .call-out {
+    background: #FBF3DC;
+    border: 1px solid var(--gold);
+    border-left: 4px solid var(--gold);
+    border-radius: var(--r);
+    padding: 18px 22px;
+    margin: 20px 0;
+  }
+  .call-out .co-label {
+    font-size: 11px; color: #876600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .call-out p { margin: 0; color: var(--ink); font-size: 14px; }
+
+  .expert-tip {
+    background: #E9F0EA;
+    border: 1px solid var(--green);
+    border-left: 4px solid var(--green);
+    border-radius: var(--r);
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .expert-tip .et-label {
+    color: var(--green);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .refs {
+    background: var(--cream);
+    border: 1px dashed var(--line-2);
+    border-radius: var(--r);
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .refs .refs-label {
+    font-size: 10px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .refs code {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    background: rgba(31,58,95,0.06);
+    padding: 1px 5px; border-radius: 3px;
+    font-size: 11px; color: var(--navy);
+  }
+
+  .key-takeaways {
+    background: linear-gradient(180deg, #F4E8F0 0%, #EFEAE0 100%);
+    border: 1px solid var(--plum);
+    border-radius: var(--r);
+    padding: 22px 26px;
+    margin: 32px 0 20px;
+  }
+  .key-takeaways .kt-label {
+    color: var(--plum);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 14px;
+  }
+  .key-takeaways ul {
+    list-style: none; padding: 0; margin: 0;
+  }
+  .key-takeaways li {
+    padding: 6px 0 6px 30px;
+    position: relative;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .key-takeaways li::before {
+    content: '→';
+    position: absolute; left: 6px;
+    color: var(--plum);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .activity {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 28px 32px;
+    margin: 40px 0;
+    box-shadow: 0 2px 8px rgba(31,58,95,0.04);
+  }
+  .activity h2 {
+    font-family: Georgia, serif;
+    font-size: 22px;
+    color: var(--navy);
+    margin: 0 0 8px;
+    font-weight: 700;
+  }
+  .activity .activity-intro {
+    color: var(--ink-2);
+    font-size: 14px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .activity-form { display: flex; flex-direction: column; gap: 18px; }
+  .field-block { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .field-label .req { color: var(--danger); margin-left: 3px; }
+  .field-hint {
+    font-size: 12px;
+    color: var(--ink-3);
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+  .input, .textarea, .select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .input:focus, .textarea:focus, .select:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(31,58,95,0.1);
+  }
+  .textarea { min-height: 80px; resize: vertical; }
+  .textarea.tall { min-height: 140px; }
+
+  .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+  .checkbox-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .checkbox-row:hover { background: var(--cream-d); }
+  .checkbox-row.checked { background: #E9F0EA; border-color: var(--green); }
+  .checkbox-row input { margin-top: 2px; accent-color: var(--green); }
+  .checkbox-row .cb-text { flex: 1; font-size: 13px; color: var(--ink); }
+
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-chip {
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--ink-2);
+    transition: all 0.15s;
+  }
+  .radio-chip:hover { background: var(--cream); }
+  .radio-chip.selected {
+    background: var(--navy); color: #fff; border-color: var(--navy);
+  }
+
+  .item-card {
+    padding: 14px 18px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    margin-bottom: 10px;
+  }
+  .item-card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .item-card-title {
+    font-weight: 600; color: var(--navy);
+    font-size: 14px;
+  }
+  .item-card-sub {
+    font-size: 11px; color: var(--ink-3);
+    margin-top: 2px;
+  }
+
+  .completion-panel {
+    background: linear-gradient(135deg, var(--navy) 0%, #14263F 100%);
+    color: #fff;
+    border-radius: var(--r);
+    padding: 32px;
+    margin-top: 40px;
+    text-align: center;
+    border-top: 4px solid var(--gold);
+  }
+  .completion-panel h3 {
+    font-family: Georgia, serif;
+    font-size: 22px;
+    margin: 0 0 10px;
+    color: var(--gold);
+  }
+  .completion-panel p {
+    margin: 0 0 22px;
+    opacity: 0.9;
+    max-width: 540px;
+    margin-left: auto; margin-right: auto;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 26px;
+    border-radius: var(--r);
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .btn-primary:hover { background: var(--gold-l); }
+  .btn-primary:disabled {
+    background: rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.4);
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.08); }
+  .btn-nav {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--navy);
+    padding: 10px 20px;
+    font-weight: 500;
+  }
+  .btn-nav:hover { background: var(--cream); }
+  .btn-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .completion-done {
+    background: linear-gradient(135deg, var(--green) 0%, #1B4332 100%) !important;
+  }
+  .completion-done h3 { color: #fff; }
+
+  .nav-bar {
+    display: flex; justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  .welcome {
+    text-align: center;
+    padding: 60px 40px;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .welcome h1 {
+    font-family: Georgia, serif;
+    font-size: 38px;
+    color: var(--navy);
+    margin: 0 0 16px;
+    line-height: 1.2;
+  }
+  .welcome .welcome-lede {
+    font-size: 16px;
+    color: var(--ink-2);
+    line-height: 1.7;
+    margin-bottom: 40px;
+  }
+  .welcome-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 40px 0;
+    text-align: left;
+  }
+  .welcome-feature {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 24px;
+    border-top: 3px solid var(--gold);
+  }
+  .welcome-feature h4 {
+    font-family: Georgia, serif;
+    color: var(--navy);
+    margin: 0 0 10px;
+    font-size: 16px;
+  }
+  .welcome-feature p {
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .footer-note {
+    text-align: center; padding: 20px 0 0;
+    color: var(--ink-3); font-size: 11px;
+    border-top: 1px solid var(--line);
+    margin-top: 60px;
+  }
+
+  .save-toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green); color: #fff;
+    padding: 12px 22px; border-radius: var(--r);
+    font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 20px rgba(45,106,79,0.3);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s;
+    z-index: 100;
+  }
+  .save-toast.show { opacity: 1; transform: translateY(0); }
+
+  /* -- New v0.2 features -- */
+  .toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding-right: 8px; border-right: 1px solid rgba(255,255,255,0.18);
+    margin-right: 8px;
+  }
+  .mode-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    cursor: pointer; user-select: none;
+    font-size: 11px; color: rgba(255,255,255,0.9);
+    transition: background 0.15s;
+  }
+  .mode-toggle:hover { background: rgba(255,255,255,0.14); }
+  .mode-toggle .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink-3);
+  }
+  .mode-toggle.live .dot { background: #10B981; box-shadow: 0 0 6px #10B981; }
+  .mode-toggle.mock .dot { background: var(--gold); }
+
+  .dialog-overlay {
+    position: fixed; inset: 0;
+    background: rgba(20,38,63,0.6);
+    display: grid; place-items: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .dialog {
+    background: var(--paper);
+    border-radius: var(--r);
+    padding: 32px;
+    max-width: 520px;
+    width: 100%;
+    border-top: 4px solid var(--gold);
+    box-shadow: 0 20px 60px rgba(20,38,63,0.4);
+  }
+  .dialog h3 {
+    font-family: Georgia, serif;
+    color: var(--navy);
+    margin: 0 0 8px;
+    font-size: 22px;
+  }
+  .dialog .dialog-sub {
+    color: var(--ink-2);
+    font-size: 13px;
+    margin-bottom: 20px;
+    line-height: 1.55;
+  }
+  .dialog-actions {
+    display: flex; gap: 10px; justify-content: flex-end;
+    margin-top: 20px;
+  }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--line-2);
+    color: var(--ink);
+    padding: 10px 20px;
+    border-radius: var(--r);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .btn-outline:hover { background: var(--cream); }
+  .btn-solid {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--r);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn-solid:hover { background: var(--navy-d); }
+
+  .export-menu {
+    position: relative;
+  }
+  .export-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    min-width: 220px;
+    box-shadow: 0 8px 24px rgba(20,38,63,0.15);
+    padding: 6px;
+    z-index: 50;
+  }
+  .export-dropdown button {
+    display: block; width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .export-dropdown button:hover { background: var(--cream); }
+  .export-dropdown .divider {
+    height: 1px; background: var(--line);
+    margin: 4px 0;
+  }
+  .export-dropdown .hint {
+    padding: 6px 14px;
+    font-size: 10px; color: var(--ink-3);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-weight: 700;
+  }
+
+  .feedback-panel {
+    margin-top: 20px;
+    background: linear-gradient(180deg, #F4E8F0 0%, #EFEAE0 100%);
+    border: 1px solid var(--plum);
+    border-radius: var(--r);
+    padding: 22px 26px;
+  }
+  .feedback-panel .fp-label {
+    color: var(--plum);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .feedback-panel p {
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 14px;
+    margin: 0 0 10px;
+  }
+  .feedback-panel .fp-loading {
+    color: var(--plum);
+    font-style: italic;
+    font-size: 13px;
+  }
+  .feedback-btn {
+    background: var(--plum);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--r);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px;
+  }
+  .feedback-btn:hover { background: #522348; }
+  .feedback-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .file-input-hidden {
+    display: none;
+  }
+
+  @media print {
+    .topbar, .sidebar, .nav-bar, .completion-panel, .save-toast, .feedback-btn { display: none !important; }
+    .main { padding: 20px; max-width: none; }
+    .shell { grid-template-columns: 1fr; }
+    .app { display: block; }
+    .phase-hero { background: none; color: var(--ink); border: 2px solid var(--navy); }
+    .phase-hero h1, .phase-hero .subtitle, .phase-hero .lede { color: var(--ink); }
+    .phase-hero .hero-num { color: rgba(0,0,0,0.08); }
+    .activity { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback } = React;
+
+/* ============ STORAGE ============ */
+const STORAGE_KEY = 'rideaforge:v2';
+const defaultState = { activePhase: 0, completed: [], data: {}, apiMode: 'mock', apiKey: '' };
+const loadState = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      // Migration from v1 if present
+      const v1 = localStorage.getItem('rideaforge:v1');
+      if (v1) return { ...defaultState, ...JSON.parse(v1) };
+      return defaultState;
+    }
+    return { ...defaultState, ...JSON.parse(raw) };
+  } catch { return defaultState; }
+};
+const saveState = (state) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+};
+
+/* ============ EXPORT / IMPORT HELPERS ============ */
+const PHASE_META_FOR_EXPORT = [
+  { id: 1, title: 'Contexte réglementaire RIDEA', output: 'Fiche des ancrages réglementaires' },
+  { id: 2, title: 'Cartographie des acteurs (dispositif wallon)', output: 'RACI des acteurs wallons' },
+  { id: 3, title: 'Les 34 nouveaux indicateurs RIDEA', output: 'Inventaire classifié' },
+  { id: 4, title: 'Comptabilité de gestion agricole', output: 'Plan comptable exploitation' },
+  { id: 5, title: 'Flux de données wallons de bout en bout', output: 'Séquencement + SLAs' },
+  { id: 6, title: 'Modélisation fonctionnelle', output: '3 user stories complètes' },
+  { id: 7, title: 'Traçabilité et conformité (cadre belge)', output: 'Modèle de matrice de traçabilité' },
+  { id: 8, title: 'Handover et pérennisation', output: 'Checklist de handover' },
+];
+
+const downloadFile = (content, filename, mimeType) => {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const csvEscape = (v) => {
+  if (v === null || v === undefined) return '';
+  const s = String(v);
+  if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+};
+
+const parseCSV = (text) => {
+  // Parses standard CSV including quoted fields with embedded commas/newlines
+  const rows = [];
+  let row = [], cell = '', inQuotes = false, i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"' && text[i+1] === '"') { cell += '"'; i += 2; continue; }
+      if (c === '"') { inQuotes = false; i++; continue; }
+      cell += c; i++; continue;
+    }
+    if (c === '"') { inQuotes = true; i++; continue; }
+    if (c === ',') { row.push(cell); cell = ''; i++; continue; }
+    if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i+1] === '\n') i++;
+      row.push(cell); rows.push(row); row = []; cell = ''; i++; continue;
+    }
+    cell += c; i++;
+  }
+  if (cell !== '' || row.length > 0) { row.push(cell); rows.push(row); }
+  return rows;
+};
+
+const exportJSON = (state) => {
+  const payload = {
+    tool: 'RIDEAForge',
+    version: '0.2',
+    exportedAt: new Date().toISOString(),
+    activePhase: state.activePhase,
+    completed: state.completed,
+    data: state.data,
+  };
+  downloadFile(JSON.stringify(payload, null, 2), `rideaforge-parcours-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+};
+
+const exportCSV = (state, phases) => {
+  const rows = [['phase_id', 'phase_title', 'field_id', 'field_label', 'field_type', 'value']];
+  phases.forEach(phase => {
+    const activity = phase.activity || {};
+    if (activity.fields) {
+      activity.fields.forEach(f => {
+        rows.push([phase.id, phase.title, f.id, f.label, f.textarea ? 'textarea' : 'input', state.data[f.id] || '']);
+      });
+    }
+    if (activity.matrix) {
+      activity.matrix.items.forEach(item => {
+        rows.push([phase.id, phase.title, `${item.id}_dim`, `${item.label} — Dimension`, 'radio', state.data[`${item.id}_dim`] || '']);
+        rows.push([phase.id, phase.title, `${item.id}_src`, `${item.label} — Source`, 'radio', state.data[`${item.id}_src`] || '']);
+      });
+    }
+    if (activity.checklist) {
+      activity.checklist.forEach(c => {
+        rows.push([phase.id, phase.title, c.id, c.label, 'checkbox', state.data[c.id] ? 'true' : 'false']);
+      });
+    }
+  });
+  const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+  downloadFile(csv, `rideaforge-parcours-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+};
+
+const importCSVData = (text) => {
+  const rows = parseCSV(text);
+  if (rows.length < 2) throw new Error('CSV vide ou invalide');
+  const header = rows[0].map(h => h.toLowerCase().trim());
+  const fieldIdIdx = header.indexOf('field_id');
+  const valueIdx = header.indexOf('value');
+  const typeIdx = header.indexOf('field_type');
+  if (fieldIdIdx === -1 || valueIdx === -1) {
+    throw new Error('CSV invalide : colonnes field_id et value requises');
+  }
+  const data = {};
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.length <= Math.max(fieldIdIdx, valueIdx)) continue;
+    const fieldId = r[fieldIdIdx];
+    const value = r[valueIdx];
+    const type = typeIdx !== -1 ? r[typeIdx] : '';
+    if (!fieldId) continue;
+    if (type === 'checkbox') {
+      data[fieldId] = value === 'true' || value === '1';
+    } else {
+      data[fieldId] = value;
+    }
+  }
+  return data;
+};
+
+const importJSONData = (text) => {
+  let payload;
+  try { payload = JSON.parse(text); }
+  catch (e) { throw new Error('Fichier JSON malformé : ' + e.message); }
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Fichier JSON invalide : contenu inattendu');
+  }
+  if (payload.tool !== 'RIDEAForge') {
+    throw new Error('Fichier JSON invalide : ce n\'est pas un export RIDEAForge (champ "tool" attendu)');
+  }
+  return {
+    activePhase: Number.isInteger(payload.activePhase) ? payload.activePhase : 0,
+    completed: Array.isArray(payload.completed) ? payload.completed : [],
+    data: (payload.data && typeof payload.data === 'object') ? payload.data : {},
+    version: payload.version || 'unknown',
+    exportedAt: payload.exportedAt || null,
+  };
+};
+
+/* ============ EXCEL EXPORT / IMPORT (SheetJS) ============ */
+
+const generatePhaseSheetData = (phase, currentData) => {
+  const rows = [];
+  rows.push([`Phase ${phase.id} — ${phase.title}`]);
+  rows.push([phase.subtitle]);
+  rows.push([`Livrable attendu : ${phase.output}`]);
+  rows.push([`Durée estimée : ${phase.duration}`]);
+  rows.push([]);
+  rows.push(['Instructions : remplissez uniquement la colonne "value" ci-dessous. Ne modifiez pas les colonnes field_id ni field_label.']);
+  rows.push([]);
+  const activity = phase.activity || {};
+  if (activity.fields) {
+    rows.push(['field_id', 'field_label', 'hint', 'value']);
+    activity.fields.forEach(f => {
+      rows.push([f.id, f.label, f.hint || '', currentData[f.id] || '']);
+    });
+  }
+  if (activity.matrix) {
+    rows.push([]);
+    rows.push(['— MATRICE DE CLASSIFICATION —']);
+    rows.push([`Dimensions valides : ${activity.matrix.dimensions.join(' | ')}`]);
+    rows.push([`Sources valides    : ${activity.matrix.sources.join(' | ')}`]);
+    rows.push([]);
+    rows.push(['item_id', 'item_label', 'dimension', 'source']);
+    activity.matrix.items.forEach(item => {
+      rows.push([
+        item.id,
+        item.label,
+        currentData[`${item.id}_dim`] || '',
+        currentData[`${item.id}_src`] || '',
+      ]);
+    });
+  }
+  if (activity.checklist) {
+    rows.push([]);
+    rows.push(['— CHECKLIST —']);
+    rows.push(['Valeurs acceptées dans la colonne value : TRUE ou FALSE']);
+    rows.push([]);
+    rows.push(['checkbox_id', 'checkbox_label', 'critical', 'value']);
+    activity.checklist.forEach(c => {
+      rows.push([c.id, c.label, c.crit ? 'TRUE' : 'FALSE', currentData[c.id] ? 'TRUE' : 'FALSE']);
+    });
+    if (activity.fields) {
+      rows.push([]);
+      rows.push(['— CHAMP LIBRE COMPLÉMENTAIRE —']);
+      rows.push([]);
+      rows.push(['field_id', 'field_label', 'hint', 'value']);
+      activity.fields.forEach(f => {
+        rows.push([f.id, f.label, f.hint || '', currentData[f.id] || '']);
+      });
+    }
+  }
+  return rows;
+};
+
+const exportExcel = (state, phases) => {
+  if (typeof XLSX === 'undefined') {
+    alert('La bibliothèque SheetJS n\'est pas chargée. Vérifiez votre connexion internet et rechargez la page.');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  // Guide sheet
+  const guideRows = [
+    ['RIDEAForge — Modèle Excel de saisie'],
+    [`Version 0.2  |  Généré le ${new Date().toLocaleString('fr-BE')}`],
+    [],
+    ['MODE D\'EMPLOI'],
+    [],
+    ['1. Remplissez chaque feuille "Phase 1" à "Phase 8" — colonne "value" uniquement.'],
+    ['2. Pour la Phase 3 (matrice), remplissez les colonnes "dimension" et "source" selon les valeurs autorisées listées.'],
+    ['3. Pour la Phase 8 (checklist), mettez TRUE ou FALSE dans la colonne "value".'],
+    ['4. Marquez les phases considérées comme terminées dans la feuille "Statut phases".'],
+    ['5. Enregistrez le fichier (.xlsx) puis réimportez-le dans RIDEAForge via le menu "Importer ▾" → "Excel (workbook complet)".'],
+    [],
+    ['ATTENTION'],
+    ['• L\'import Excel REMPLACE complètement l\'état actuel de l\'application (progression, complétions, saisies).'],
+    ['• Ne renommez pas les feuilles ni les colonnes système (field_id, item_id, checkbox_id) — l\'import échouerait.'],
+    ['• Les feuilles _meta et Guide ne doivent pas être supprimées.'],
+    [],
+    ['PHASES DU PARCOURS'],
+    [],
+    ['Phase', 'Titre', 'Sous-titre', 'Livrable', 'Durée'],
+    ...phases.map(p => [p.id, p.title, p.subtitle, p.output, p.duration]),
+  ];
+  const guideSheet = XLSX.utils.aoa_to_sheet(guideRows);
+  guideSheet['!cols'] = [{ wch: 8 }, { wch: 45 }, { wch: 45 }, { wch: 35 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, guideSheet, 'Guide');
+
+  // Phase sheets
+  phases.forEach(phase => {
+    const sheetData = generatePhaseSheetData(phase, state.data);
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!cols'] = [
+      { wch: 18 }, // field_id
+      { wch: 50 }, // field_label
+      { wch: 45 }, // hint
+      { wch: 70 }, // value
+    ];
+    XLSX.utils.book_append_sheet(wb, ws, `Phase ${phase.id}`);
+  });
+
+  // Status sheet
+  const statusRows = [
+    ['Statut de complétion des phases'],
+    [`Mettez TRUE dans la colonne "Terminée" pour marquer une phase comme complétée.`],
+    [],
+    ['Phase', 'Titre', 'Terminée'],
+    ...phases.map(p => [p.id, p.title, state.completed.includes(p.id) ? 'TRUE' : 'FALSE']),
+  ];
+  const statusSheet = XLSX.utils.aoa_to_sheet(statusRows);
+  statusSheet['!cols'] = [{ wch: 8 }, { wch: 55 }, { wch: 15 }];
+  XLSX.utils.book_append_sheet(wb, statusSheet, 'Statut phases');
+
+  // Metadata sheet (hidden-like, small)
+  const metaRows = [
+    ['key', 'value'],
+    ['tool', 'RIDEAForge'],
+    ['version', '0.2'],
+    ['exportedAt', new Date().toISOString()],
+    ['activePhase', state.activePhase],
+  ];
+  const metaSheet = XLSX.utils.aoa_to_sheet(metaRows);
+  metaSheet['!cols'] = [{ wch: 15 }, { wch: 40 }];
+  XLSX.utils.book_append_sheet(wb, metaSheet, '_meta');
+
+  XLSX.writeFile(wb, `rideaforge-parcours-${new Date().toISOString().split('T')[0]}.xlsx`);
+};
+
+const importFromExcel = async (file) => {
+  if (typeof XLSX === 'undefined') {
+    throw new Error('La bibliothèque SheetJS n\'est pas chargée.');
+  }
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer, { type: 'array' });
+
+  // Validate metadata sheet
+  const metaSheet = wb.Sheets['_meta'];
+  if (!metaSheet) throw new Error('Feuille "_meta" absente : fichier non reconnu comme workbook RIDEAForge');
+  const metaRows = XLSX.utils.sheet_to_json(metaSheet, { header: 1, defval: '' });
+  const meta = {};
+  metaRows.forEach(r => {
+    if (r[0] && r[0] !== 'key' && r[1] !== undefined) meta[r[0]] = r[1];
+  });
+  if (meta.tool !== 'RIDEAForge') {
+    throw new Error('Métadonnée "tool = RIDEAForge" attendue dans la feuille _meta');
+  }
+
+  // Read status sheet for completed phases
+  const completed = [];
+  const statusSheet = wb.Sheets['Statut phases'];
+  if (statusSheet) {
+    const rows = XLSX.utils.sheet_to_json(statusSheet, { header: 1, defval: '' });
+    let headerIdx = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === 'Phase' && String(rows[i][2] || '').trim().startsWith('Termin')) {
+        headerIdx = i; break;
+      }
+    }
+    if (headerIdx !== -1) {
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const phaseCell = rows[i][0];
+        const doneCell = String(rows[i][2] || '').toUpperCase().trim();
+        const phaseNum = Number(phaseCell);
+        if (Number.isInteger(phaseNum) && phaseNum > 0 && doneCell === 'TRUE') {
+          completed.push(phaseNum);
+        }
+      }
+    }
+  }
+
+  // Read phase sheets
+  const data = {};
+  wb.SheetNames.forEach(sheetName => {
+    if (!/^Phase \d+$/.test(sheetName)) return;
+    const ws = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    // Parse fields sections (header "field_id, field_label, hint, value")
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === 'field_id' && String(rows[i][3] || '').trim() === 'value') {
+        // Read subsequent rows until we hit a blank first cell or a new section header
+        for (let j = i + 1; j < rows.length; j++) {
+          const row = rows[j];
+          const cellA = String(row[0] || '').trim();
+          if (!cellA) break;
+          if (cellA.startsWith('—') || cellA === 'item_id' || cellA === 'checkbox_id' || cellA === 'field_id') break;
+          const value = row[3] !== undefined && row[3] !== null ? String(row[3]) : '';
+          if (cellA && value !== '') data[cellA] = value;
+        }
+      }
+    }
+
+    // Parse matrix section (header "item_id, item_label, dimension, source")
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === 'item_id') {
+        for (let j = i + 1; j < rows.length; j++) {
+          const row = rows[j];
+          const cellA = String(row[0] || '').trim();
+          if (!cellA) break;
+          if (cellA.startsWith('—') || cellA === 'field_id' || cellA === 'checkbox_id') break;
+          const dim = String(row[2] || '').trim();
+          const src = String(row[3] || '').trim();
+          if (cellA && dim) data[`${cellA}_dim`] = dim;
+          if (cellA && src) data[`${cellA}_src`] = src;
+        }
+      }
+    }
+
+    // Parse checklist section (header "checkbox_id, checkbox_label, critical, value")
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === 'checkbox_id') {
+        for (let j = i + 1; j < rows.length; j++) {
+          const row = rows[j];
+          const cellA = String(row[0] || '').trim();
+          if (!cellA) break;
+          if (cellA.startsWith('—') || cellA === 'field_id' || cellA === 'item_id') break;
+          const val = String(row[3] || '').toUpperCase().trim();
+          data[cellA] = (val === 'TRUE' || val === 'VRAI' || val === '1' || val === 'YES');
+        }
+      }
+    }
+  });
+
+  return {
+    activePhase: Number.isInteger(Number(meta.activePhase)) ? Number(meta.activePhase) : 0,
+    completed,
+    data,
+    version: meta.version || 'unknown',
+    exportedAt: meta.exportedAt || null,
+  };
+};
+
+const exportMarkdown = (state, phases) => {
+  let md = `# RIDEAForge — Parcours BA RIDEA/RICA (Wallonie)\n\n`;
+  md += `**Exporté le :** ${new Date().toLocaleDateString('fr-BE')}  \n`;
+  md += `**Phases complétées :** ${state.completed.length} / ${phases.length}  \n`;
+  md += `\n---\n\n`;
+  phases.forEach(phase => {
+    const done = state.completed.includes(phase.id);
+    md += `## Phase ${phase.id} — ${phase.title} ${done ? '✓' : ''}\n\n`;
+    md += `*${phase.subtitle}*\n\n`;
+    md += `**Livrable attendu :** ${phase.output}\n\n`;
+    const activity = phase.activity || {};
+    if (activity.fields) {
+      activity.fields.forEach(f => {
+        const val = state.data[f.id] || '_(non renseigné)_';
+        md += `### ${f.label}\n\n${val}\n\n`;
+      });
+    }
+    if (activity.matrix) {
+      md += `### Classification des indicateurs\n\n`;
+      md += `| Indicateur | Dimension | Source |\n|---|---|---|\n`;
+      activity.matrix.items.forEach(item => {
+        const dim = state.data[`${item.id}_dim`] || '—';
+        const src = state.data[`${item.id}_src`] || '—';
+        md += `| ${item.label} | ${dim} | ${src} |\n`;
+      });
+      md += `\n`;
+    }
+    if (activity.checklist) {
+      md += `### Checklist\n\n`;
+      activity.checklist.forEach(c => {
+        const done = state.data[c.id] ? '☑' : '☐';
+        md += `- ${done} ${c.label}${c.crit ? ' _(critique)_' : ''}\n`;
+      });
+      md += `\n`;
+      if (activity.fields) {
+        activity.fields.forEach(f => {
+          const val = state.data[f.id] || '_(non renseigné)_';
+          md += `### ${f.label}\n\n${val}\n\n`;
+        });
+      }
+    }
+    md += `\n---\n\n`;
+  });
+  downloadFile(md, `rideaforge-parcours-${new Date().toISOString().split('T')[0]}.md`, 'text/markdown');
+};
+
+/* ============ CLAUDE API CALL ============ */
+const callClaudeAPI = async (apiKey, prompt) => {
+  if (!apiKey) throw new Error('Clé API manquante');
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1024,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Erreur API (${response.status}): ${err.slice(0, 200)}`);
+  }
+  const data = await response.json();
+  return data.content?.[0]?.text || '(réponse vide)';
+};
+
+const buildFeedbackPrompt = (phase, data) => {
+  const activity = phase.activity || {};
+  let userWork = '';
+  if (activity.fields) {
+    activity.fields.forEach(f => {
+      const val = data[f.id];
+      if (val) userWork += `\n\n**${f.label}**\n${val}`;
+    });
+  }
+  if (activity.matrix) {
+    userWork += '\n\n**Classifications :**';
+    activity.matrix.items.forEach(item => {
+      userWork += `\n- ${item.label}: dimension=${data[`${item.id}_dim`] || '?'} / source=${data[`${item.id}_src`] || '?'}`;
+    });
+  }
+  return `Tu es un mentor Business Analyst expert du domaine RIDEA (Réseau d'Information sur la Durabilité des Exploitations Agricoles) en Belgique wallonne — dispositif piloté par la DAEA (Direction de l'Analyse Économique Agricole, SPW-ARNE Namur).
+
+Un BA junior vient de compléter l'activité de la Phase ${phase.id} — "${phase.title}" (${phase.subtitle}).
+
+Voici son travail :${userWork}
+
+Donne-lui un feedback constructif en 3-4 paragraphes maximum (ton bienveillant mais exigeant, français professionnel) :
+1. Ce qui est bien
+2. Ce qui manque ou pourrait être plus précis
+3. Une piste concrète d'amélioration
+
+Ne réécris pas ses réponses. Reste concis.`;
+};
+
+const MOCK_FEEDBACK = (phase) => `**Feedback mode Mock (aucun appel API réel).**
+
+Ce que je vois de bien : vous avez posé la structure attendue pour la Phase ${phase.id}. Le vocabulaire technique est présent, ce qui montre que vous avez lu la leçon avant d'agir.
+
+Ce qui pourrait être plus précis : n'hésitez pas à citer un texte réglementaire ou un acteur nommé (DAEA, centre de gestion agréé, article du règlement UE 2023/2674) chaque fois que possible. En contexte secteur public, l'ancrage nominatif renforce la crédibilité.
+
+Piste d'amélioration : reformulez chaque réponse en incluant un exemple concret (un chiffre, un nom, un texte). Passez du général au précis.
+
+*Activez le mode Live et fournissez une clé API Anthropic pour obtenir un feedback IA réel, adapté à votre travail précis.*`;
+
+/* ============ PHASE CONTENT ============ */
+const PHASES = [
+  /* --------------- PHASE 1 --------------- */
+  {
+    id: 1,
+    slug: 'contexte',
+    title: 'Contexte réglementaire RIDEA',
+    subtitle: 'Comprendre la transition RICA → RIDEA en Belgique',
+    duration: '25 min',
+    output: 'Fiche des ancrages réglementaires',
+    lede: "Avant de modéliser quoi que ce soit, un BA sérieux commence par cadrer le contexte réglementaire. Sur RIDEA en Belgique, ce cadre combine droit européen directement applicable et régionalisation stricte de la compétence agricole — c'est la première clé de lecture du projet.",
+    lesson: () => (<>
+      <h2>Pourquoi RIDEA remplace RICA — le cadre européen</h2>
+      <p>Le <strong>RICA (Réseau d'Information Comptable Agricole)</strong> existe depuis 1968 dans l'ensemble de l'Union européenne. Il a été instauré par le règlement <code>79/65/CEE</code> du Conseil, avec un objectif unique : collecter des <strong>données comptables et technico-économiques</strong> pour évaluer le revenu et le fonctionnement économique des exploitations agricoles. Il a longtemps été l'instrument central de pilotage de la Politique Agricole Commune (PAC).</p>
+      <p>Mais la PAC a évolué. Le <strong>Pacte Vert européen</strong> et sa stratégie <em>« De la ferme à la table »</em> imposent aujourd'hui de mesurer les progrès en matière de durabilité — pas seulement le revenu économique. Pour piloter des politiques publiques de transition écologique, il faut des données environnementales et sociales, pas juste comptables.</p>
+      <p>C'est pourquoi la Commission européenne a transformé le RICA en <strong>RIDEA (Réseau d'Information sur la Durabilité des Exploitations Agricoles)</strong>. Un accord politique a été trouvé le 29 juin 2023 entre le Conseil et le Parlement, et le règlement adopté formellement le 13 novembre 2023.</p>
+
+      <div className="call-out">
+        <div className="co-label">Le point à retenir</div>
+        <p>RIDEA n'est pas un nouveau système à côté de RICA. C'est <strong>le RICA élargi</strong> — les ~1000 variables comptables existantes restent, et <strong>34 nouveaux indicateurs</strong> environnementaux et sociaux viennent s'y ajouter. Le socle est le même. La couverture s'étend.</p>
+      </div>
+
+      <h2>Le contexte belge — régionalisation stricte</h2>
+      <p>Voici le point où le contexte belge diverge du modèle français. En Belgique, <strong>l'agriculture est une compétence régionale</strong> depuis les réformes institutionnelles des années 1980-90. Il n'y a donc pas d'équivalent belge du Ministère de l'Agriculture français. À la place, trois dispositifs coexistent :</p>
+      <ul>
+        <li><strong>Wallonie</strong> — la <strong>DAEA (Direction de l'Analyse Économique Agricole)</strong> au sein du DEMNA (Département de l'Étude du Milieu Naturel et Agricole), lui-même dans le SPW-ARNE (Service Public de Wallonie Agriculture, Ressources Naturelles et Environnement). Basée à Namur. ~430 exploitations wallonnes suivies.</li>
+        <li><strong>Flandre</strong> — le <strong>LMN (Landbouwmonitoringsnetwerk)</strong> géré par l'Agentschap Landbouw en Zeevisserij / Departement Landbouw en Visserij. ~600 exploitations flamandes.</li>
+        <li><strong>Fédéral</strong> — <strong>Statbel</strong> (DG Statistique du SPF Économie) coordonne certaines statistiques agricoles et alimente les remontées européennes en articulation avec les régions.</li>
+      </ul>
+      <p>Au total, la Belgique remonte donc environ <strong>1 050 exploitations</strong> à la Commission européenne — à comparer aux 80 000 exploitations de l'ensemble de l'UE. Une petite contribution en volume, mais qui compte politiquement.</p>
+
+      <h2>Les textes qui cadrent tout</h2>
+      <p>Trois textes juridiques structurent le projet en Belgique et vous les rencontrerez plusieurs fois pendant la mission :</p>
+      <ol>
+        <li><strong>Règlement (CE) 1217/2009</strong> du 30 novembre 2009 — base juridique historique du RICA/RIDEA, directement applicable dans les États membres.</li>
+        <li><strong>Règlement (UE) 2023/2674</strong> du 22 novembre 2023 — modifie le règlement 1217/2009 et opère la transformation RICA → RIDEA au niveau européen. <strong>Directement applicable en Belgique</strong> — pas besoin de transposition pour la substance.</li>
+        <li><strong>Règlement d'exécution</strong> de la Commission européenne adopté le 25 octobre 2024 — fixe les modalités techniques : nouvelles variables, seuils économiques, calendrier de transition, plan de financement.</li>
+      </ol>
+      <p>La transposition administrative belge — qui désigne les autorités compétentes et organise le dispositif national — passe par le <strong>Code wallon de l'Agriculture</strong> et des arrêtés du Gouvernement wallon pour la Wallonie, ou par des décrets de la Communauté flamande pour la Flandre. Il n'y a pas d'équivalent belge du décret français 2024-1024.</p>
+
+      <div className="refs">
+        <div className="refs-label">Références utiles</div>
+        <p>• Règlement CE 1217/2009 (base juridique historique)<br/>• Règlement UE 2023/2674 (transformation)<br/>• Code wallon de l'Agriculture (transposition administrative WA)<br/>• Portail agriculture.wallonie.be — publications de la DAEA<br/>• Portail etat-agriculture.wallonie.be — état de l'agriculture wallonne (rapport annuel)</p>
+      </div>
+
+      <h2>Trois dimensions, une seule collecte</h2>
+      <p>La collecte RIDEA couvre désormais trois dimensions complémentaires :</p>
+      <ul>
+        <li><strong>Économique</strong> — l'héritage RICA : ~1000 variables (charges, produits, stocks, capitaux, résultats).</li>
+        <li><strong>Environnementale</strong> — nouveau : empreinte carbone, Indice de Fréquence de Traitement (IFT) phytosanitaire, biodiversité, utilisation des sols, gestion de l'eau, part d'agriculture biologique.</li>
+        <li><strong>Sociale</strong> — nouveau : main d'œuvre, temps de travail, formation, conditions d'emploi, égalité femmes-hommes.</li>
+      </ul>
+      <p>Ces trois dimensions sont traitées comme <strong>une seule enquête intégrée</strong> — même exploitant, même centre de gestion agréé, même canal de remontée à la DAEA.</p>
+
+      <h2>Calendrier de transition</h2>
+      <p>L'entrée en vigueur est <strong>progressive</strong> et suit le calendrier européen :</p>
+      <ul>
+        <li><strong>2025</strong> — quelques nouvelles variables sont ajoutées, mais l'essentiel de la collecte reste sur le format RICA hérité.</li>
+        <li><strong>2026-2028</strong> — l'essentiel des nouveaux indicateurs entre progressivement en vigueur, exercice par exercice.</li>
+        <li><strong>2029</strong> — première transmission complète à la Commission européenne des données 2028.</li>
+      </ul>
+
+      <div className="expert-tip">
+        <div className="et-label">Conseil BA</div>
+        En entretien client wallon, quand on vous demande « que savez-vous du projet ? », cette structure — <strong>règlement européen directement applicable + transposition administrative wallonne + calendrier 2025-2028</strong> — vaut à elle seule 10 minutes de crédibilité. Mentionnez la <strong>régionalisation belge</strong> comme fait connu, pas comme découverte tardive.
+      </div>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>RIDEA <strong>remplace</strong> RICA (transformation par règlement UE 2023/2674), avec 34 nouveaux indicateurs environnementaux et sociaux.</li>
+          <li>En Belgique, agriculture = compétence régionale. Trois dispositifs : Wallonie (DAEA), Flandre (LMN), Fédéral (Statbel pour coordination).</li>
+          <li>Volumes belges : ~430 exploitations WA + ~600 VL ≈ 1050 belges (sur 80 000 UE).</li>
+          <li>Cadre juridique wallon : règlement UE directement applicable + Code wallon de l'Agriculture + arrêtés SPW.</li>
+          <li>Calendrier : progressif 2025-2028, transmission pleine à la Commission en 2029.</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Rédigez la fiche des ancrages réglementaires (contexte wallon)',
+      intro: "Cette fiche vous suivra pendant toute la mission. Elle vous permet de citer précisément les textes et la structure institutionnelle en réunion.",
+      fields: [
+        { id: 'p1_program', label: 'Nom complet du programme (contexte belge)', hint: 'Dénomination officielle actuelle + nom historique remplacé', placeholder: 'Réseau d\'Information sur la Durabilité des Exploitations Agricoles (RIDEA), successeur du RICA' },
+        { id: 'p1_reg_eu', label: 'Base réglementaire européenne', hint: 'Un règlement d\'origine + un règlement de transformation + un règlement d\'exécution', textarea: true, placeholder: '' },
+        { id: 'p1_reg_be', label: 'Cadre administratif wallon', hint: 'Où trouve-t-on la transposition administrative en Wallonie ?', placeholder: '' },
+        { id: 'p1_new', label: 'Nombre de nouveaux indicateurs et leurs 3 dimensions', hint: '', placeholder: '' },
+        { id: 'p1_volumes', label: 'Volumes belges (WA + VL) et positionnement UE', hint: 'Approximatif', placeholder: '' },
+        { id: 'p1_calendar', label: 'Calendrier de déploiement en une ligne', hint: 'Quand la collecte se déploie complètement', placeholder: '' },
+      ],
+    },
+  },
+
+  /* --------------- PHASE 2 --------------- */
+  {
+    id: 2,
+    slug: 'acteurs',
+    title: 'Cartographie des acteurs (dispositif wallon)',
+    subtitle: 'Qui fait quoi dans RIDEA côté Wallonie',
+    duration: '20 min',
+    output: 'RACI des acteurs wallons',
+    lede: "Le dispositif RIDEA wallon est structuré autour d'un pilote régional (DAEA) et d'un réseau de collecteurs (centres de gestion agréés). Comprendre qui joue quel rôle est la deuxième condition pour naviguer efficacement en mission.",
+    lesson: () => (<>
+      <h2>La chaîne wallonne — quatre niveaux principaux</h2>
+      <p>Le dispositif RIDEA en Wallonie est plus compact que son équivalent français. Il n'y a pas de couche intermédiaire régionale supplémentaire — la DAEA joue à la fois le rôle de pilote régional et de coordinateur des collectes. Voici les quatre niveaux à connaître :</p>
+
+      <h3>1. L'exploitant agricole (source)</h3>
+      <p>La donnée part de lui. En Wallonie, RIDEA repose sur un <strong>volontariat</strong> — l'exploitant choisit de participer, et signe une convention avec un centre de gestion agréé. Il doit répondre à certains critères d'éligibilité : PBS ≥ 25 000 €, représentativité par taille et orientation de production.</p>
+      <p>Contrepartie du volontariat : l'exploitant reçoit <strong>gratuitement</strong> sa comptabilité de gestion agricole, une comparaison avec des exploitations similaires, et un accompagnement analytique. C'est un vrai avantage — la comptabilité de gestion est souvent une condition préalable à certaines aides wallonnes.</p>
+
+      <div className="expert-tip">
+        <div className="et-label">Signal utile</div>
+        Cette dépendance au consentement conditionne fortement la plateforme : elle doit garantir la <strong>confidentialité</strong>, tracer le consentement, et permettre le <strong>retrait</strong>. C'est un enjeu métier majeur.
+      </div>
+
+      <h3>2. Les centres de gestion agréés (collecteurs)</h3>
+      <p>Ce sont <strong>les structures qui tiennent la comptabilité de gestion agricole</strong> des exploitants participants — reconnues par un agrément SPW-ARNE. Ce sont soit des structures privées, soit publiques. Exemples en Wallonie :</p>
+      <ul>
+        <li><strong>CPL-Promogest</strong> — Centre Provincial Liégeois de Promotion et de Gestion en Agriculture (province de Liège — juste à côté de vous si vous êtes en Wallonie).</li>
+        <li><strong>SPIGVA</strong> — Service Provincial d'Information, de Gestion et de Vulgarisation Agricole.</li>
+        <li><strong>CREPA</strong> — Centre pour la Recherche, l'Économie et la Promotion Agricole.</li>
+      </ul>
+      <p>Ces centres saisissent les données comptables au format DAEA et remontent périodiquement à Namur. Ce sont vos <strong>utilisateurs principaux</strong> côté saisie sur la plateforme. Ils sont en réseau — la DAEA anime des groupes de travail communs pour harmoniser les méthodologies.</p>
+
+      <h3>3. La DAEA (pilote régional wallon)</h3>
+      <p>La <strong>Direction de l'Analyse Économique Agricole</strong> est le cœur institutionnel du dispositif RIDEA wallon. Positionnement :</p>
+      <ul>
+        <li>Fait partie du <strong>DEMNA</strong> (Département de l'Étude du Milieu Naturel et Agricole).</li>
+        <li>Le DEMNA est dans le <strong>SPW-ARNE</strong> (Service Public de Wallonie Agriculture, Ressources Naturelles et Environnement).</li>
+        <li>Adresse principale : <strong>Chaussée de Louvain 14, 5000 Namur</strong>.</li>
+        <li>~26 agents répartis sur 5 implantations (Ath, Huy, Libramont, Malmedy, Namur), dont 15 comptables agricoles et 7 spécialistes en agriculture.</li>
+      </ul>
+      <p>Missions principales : collecte, validation, traitement et analyse des données. Rapportage au niveau <strong>fédéral, régional et européen</strong>. Diffusion via le portail de l'agriculture wallonne et le rapport annuel « État de l'Agriculture Wallonne ».</p>
+
+      <h3>4. Niveau fédéral et européen</h3>
+      <ul>
+        <li><strong>Statbel</strong> (DG Statistique du SPF Économie) — coordination fédérale des statistiques agricoles belges. Les fiches indicateurs de la DAEA citent systématiquement Statbel comme source complémentaire.</li>
+        <li><strong>Commission européenne (DG AGRI)</strong> — destinataire réglementaire final, agrège les données de tous les États membres.</li>
+        <li><strong>Chercheurs et académiques</strong> — accès aux données individuelles anonymisées sous convention, avec contraintes de confidentialité renforcées.</li>
+      </ul>
+
+      <div className="call-out">
+        <div className="co-label">Point de vigilance</div>
+        <p>Contrairement au modèle français où le SSP national pilote directement les SRISET régionaux, le dispositif belge est <strong>régionalisé sans couche intermédiaire</strong>. La coordination fédérale via Statbel joue plus un rôle statistique qu'organisationnel — l'autorité opérationnelle est bien à la DAEA côté wallon.</p>
+      </div>
+
+      <h2>Deux flux transversaux à connaître</h2>
+      <p><strong>Le portail etat-agriculture.wallonie.be</strong> — c'est le canal officiel de diffusion des statistiques agricoles wallonnes. Fiches indicateurs, comparaisons interannuelles, données par région agricole et par OTEX. Un flux d'export vers ce portail doit être prévu dans l'architecture de la plateforme.</p>
+      <p><strong>Statbel</strong> — coordination fédérale : certaines données remontent aussi au niveau fédéral pour composition d'indicateurs nationaux et transmission européenne coordonnée. L'articulation régional-fédéral est un enjeu spécifique belge.</p>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>Quatre niveaux wallons : Exploitant → Centre de gestion agréé → DAEA (Namur, 26 agents, 5 sites) → Statbel/Commission européenne.</li>
+          <li>La DAEA est le pilote régional — pas de couche SRISET intermédiaire à la française.</li>
+          <li>Trois centres de gestion agréés à citer : CPL-Promogest (Liège), SPIGVA, CREPA.</li>
+          <li>Diffusion : etat-agriculture.wallonie.be (portail public régional) + Statbel (fédéral) + Commission européenne.</li>
+          <li>Le consentement de l'exploitant est un pilier — gratuité de la comptabilité contre volontariat de participation.</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Complétez la carte RACI des acteurs wallons',
+      intro: 'Pour chaque acteur, identifiez son rôle principal dans le dispositif RIDEA en une phrase claire. Cela vous servira à naviguer politiquement pendant la mission.',
+      fields: [
+        { id: 'p2_daea', label: 'DAEA — Direction de l\'Analyse Économique Agricole', hint: 'Rôle principal + rattachement institutionnel', textarea: true, placeholder: '' },
+        { id: 'p2_centres', label: 'Centres de gestion agréés (CPL-Promogest, SPIGVA, CREPA)', hint: 'Rôle opérationnel + statut', textarea: true, placeholder: '' },
+        { id: 'p2_exploitants', label: 'Exploitants agricoles wallons', hint: 'Statut juridique dans le dispositif + contrepartie', textarea: true, placeholder: '' },
+        { id: 'p2_statbel', label: 'Statbel (fédéral)', hint: 'Nature de la relation avec le dispositif wallon', textarea: true, placeholder: '' },
+        { id: 'p2_ce', label: 'Commission européenne (DG AGRI)', hint: 'Nature de la relation avec le dispositif WA/BE', textarea: true, placeholder: '' },
+        { id: 'p2_portail', label: 'Portail etat-agriculture.wallonie.be', hint: 'Rôle dans la diffusion aval', textarea: true, placeholder: '' },
+      ],
+    },
+  },
+
+  /* --------------- PHASE 3 --------------- */
+  {
+    id: 3,
+    slug: 'indicateurs',
+    title: 'Les 34 nouveaux indicateurs RIDEA',
+    subtitle: 'Économique, environnemental, social — classification et sources',
+    duration: '30 min',
+    output: 'Inventaire classifié des indicateurs',
+    lede: "C'est le cœur métier de RIDEA : la manière dont on structure les 34 nouveaux indicateurs conditionne le modèle de données de la plateforme. Cette phase vous apprend à les classifier et à identifier leurs sources — le cadre est européen harmonisé, donc directement applicable en Wallonie.",
+    lesson: () => (<>
+      <h2>La logique des trois dimensions</h2>
+      <p>Le règlement d'exécution du 25 octobre 2024 introduit 34 nouveaux indicateurs qui s'ajoutent aux ~1000 variables déjà collectées dans le cadre du RICA. Ces nouveaux indicateurs se répartissent entre trois dimensions dont les logiques de collecte sont <strong>très différentes</strong> — un point crucial pour l'architecture.</p>
+
+      <h3>Dimension économique (l'existant)</h3>
+      <p>Ce socle historique reste inchangé dans son principe : charges par nature (semences, engrais, phytosanitaires, énergie, main d'œuvre, amortissements, fermages), produits par destination (culture, cheptel, aides PAC), stocks, capitaux engagés, résultats. La donnée est <strong>comptable</strong> — elle vient de la comptabilité tenue par le centre de gestion agréé pour l'exploitant.</p>
+
+      <h3>Dimension environnementale (nouvelle)</h3>
+      <p>Voici où ça devient intéressant. Les indicateurs environnementaux peuvent avoir <strong>quatre origines de données différentes</strong>, et cette diversité impose une gestion architecturale spécifique :</p>
+      <ol>
+        <li><strong>Dérivés de la comptabilité existante</strong> : l'IFT (Indice de Fréquence de Traitement phytosanitaire) peut se calculer à partir des consommations d'intrants déjà saisies dans la fiche comptable. Aucune saisie supplémentaire — juste un enrichissement calculé.</li>
+        <li><strong>Déclaratifs par l'exploitant</strong> : la part d'agriculture biologique (en culture et en élevage) est certifiée par un organisme externe et déclarée par l'exploitant.</li>
+        <li><strong>Calculés à partir de coefficients</strong> : l'empreinte carbone peut se dériver de la structure de production et de la consommation d'énergie via des coefficients standardisés (méthodologie GES).</li>
+        <li><strong>Sources externes API</strong> : certains indicateurs pédologiques ou de biodiversité peuvent être enrichis par croisement avec des bases de données publiques (registre parcellaire wallon, bases INRAE-Wallonie, réseau Natura 2000).</li>
+      </ol>
+
+      <div className="expert-tip">
+        <div className="et-label">Signal architectural fort</div>
+        Un indicateur <strong>calculé</strong> et un indicateur <strong>déclaratif</strong> imposent des traitements très différents : le premier doit être <strong>reproductible</strong> (audit trail sur la formule), le second doit être <strong>tracé et versionné</strong> (audit trail sur la saisie). Votre modèle de données doit distinguer ces deux natures.
+      </div>
+
+      <h3>Dimension sociale (nouvelle)</h3>
+      <p>Les indicateurs sociaux sont essentiellement <strong>déclaratifs</strong>. Ils portent sur la main d'œuvre (nombre d'unités de travail annuel — UTA), le temps de travail, la formation continue, les conditions d'emploi (types de contrats, saisonniers vs permanents), et l'égalité femmes-hommes. En Wallonie, ces données recoupent partiellement les données déjà remontées à l'ONSS et à l'INASTI — un enjeu d'articulation à gérer.</p>
+      <p>Ces données sont sensibles — elles engagent l'exploitant sur des aspects RH parfois inconfortables. La <strong>confidentialité</strong> et la <strong>garantie que ces données ne peuvent pas être utilisées contre lui</strong> sont un enjeu majeur d'acceptation.</p>
+
+      <div className="call-out">
+        <div className="co-label">Le point à retenir</div>
+        <p>Trois dimensions, mais surtout <strong>trois natures de données</strong> qui structurent votre architecture : (1) comptable dérivé de saisie centre de gestion, (2) déclaratif direct exploitant, (3) calculé selon coefficients ou enrichi par API externe. Traiter tout de manière uniforme = échec d'ergonomie et de qualité.</p>
+      </div>
+
+      <h2>Concepts clés à maîtriser (vocabulaire européen harmonisé)</h2>
+      <p><strong>PBS (Production Brute Standard)</strong> — Indicateur normalisé de la dimension économique d'une exploitation. Calculée à partir de coefficients standard par type de production (X €/ha de blé, Y €/vache laitière, etc.). Seuil d'éligibilité RIDEA : PBS ≥ 25 000 €/an.</p>
+      <p><strong>OTEX (Orientation Technico-Économique des Exploitations)</strong> — Typologie de spécialisation basée sur la part de PBS venant de chaque type de production. Une exploitation OTEX 15 = grandes cultures, OTEX 45 = bovins-lait, OTEX 48 = ovins-caprins, etc. En Wallonie, l'orientation bovins-lait est particulièrement représentée (Ardenne, Fagnes).</p>
+      <p><strong>CDEX (Classe de Dimension Économique)</strong> — Segmentation en classes de PBS, du plus petit au plus grand. Permet la stratification de l'échantillonnage.</p>
+      <p><strong>SAU (Surface Agricole Utile)</strong> — Superficie agricole exploitée. Utilisée pour normaliser certains indicateurs (à l'hectare).</p>
+      <p><strong>UTA (Unité de Travail Annuel)</strong> — Équivalent temps plein agricole (1 UTA = 1 personne à temps plein sur l'année). Sert à mesurer la main d'œuvre. La DAEA utilise aussi <strong>UTF (Unité de Travail Familial)</strong> pour la main d'œuvre non salariée.</p>
+      <p><strong>IFT (Indice de Fréquence de Traitement)</strong> — Nombre de doses de référence de produits phytosanitaires appliquées à l'hectare. Indicateur environnemental clé.</p>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>34 nouveaux indicateurs répartis sur 3 dimensions : économique (existant élargi), environnementale (nouveau), sociale (nouveau).</li>
+          <li>Quatre natures de sources : dérivé comptable, déclaratif exploitant, calculé par coefficients, enrichi via API externe.</li>
+          <li>Chaque nature impose un traitement architectural différent.</li>
+          <li>Vocabulaire européen harmonisé à maîtriser : PBS, OTEX, CDEX, SAU, UTA/UTF, IFT.</li>
+          <li>En Wallonie, articulation avec ONSS/INASTI sur les données sociales — enjeu d'intégration.</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Classifiez ces 8 indicateurs représentatifs',
+      intro: "Pour chaque indicateur, choisissez sa dimension (économique / environnementale / sociale) et sa source primaire (dérivé comptable / déclaratif exploitant / calculé / API externe).",
+      matrix: {
+        items: [
+          { id: 'i1', label: 'Charges de semences' },
+          { id: 'i2', label: 'Empreinte carbone annuelle' },
+          { id: 'i3', label: 'Nombre d\'UTA (temps plein)' },
+          { id: 'i4', label: 'IFT phytosanitaire' },
+          { id: 'i5', label: 'Marge brute par culture' },
+          { id: 'i6', label: 'Part d\'agriculture biologique certifiée' },
+          { id: 'i7', label: 'Heures de formation continue du chef d\'exploitation' },
+          { id: 'i8', label: 'Consommation d\'eau d\'irrigation' },
+        ],
+        dimensions: ['économique', 'environnementale', 'sociale'],
+        sources: ['dérivé comptable', 'déclaratif exploitant', 'calculé', 'API externe'],
+      },
+    },
+  },
+
+  /* --------------- PHASE 4 --------------- */
+  {
+    id: 4,
+    slug: 'compta',
+    title: 'Comptabilité de gestion agricole (le terme wallon)',
+    subtitle: 'Le socle économique de RIDEA : charges par nature et destination',
+    duration: '25 min',
+    output: 'Plan comptable adapté à une exploitation-type',
+    lede: "La comptabilité de gestion agricole (comme on l'appelle en Wallonie) est le langage économique de RIDEA. Un BA qui la maîtrise dialogue directement avec le métier. Bonne nouvelle : c'est la même logique que la comptabilité analytique bancaire ou industrielle — juste appliquée à un domaine spécifique.",
+    lesson: () => (<>
+      <h2>Terminologie wallonne : comptabilité de gestion agricole</h2>
+      <p>En Wallonie, le terme officiel est <strong>« comptabilité de gestion agricole »</strong> — c'est celui que la DAEA et les centres de gestion agréés utilisent. Techniquement, c'est une <strong>comptabilité analytique</strong> appliquée à l'exploitation agricole. Ne pas la confondre avec la comptabilité fiscale (tenue pour l'administration fiscale, optimisée pour le calcul de l'impôt).</p>
+
+      <h2>La double lecture : par nature et par destination</h2>
+      <p>La comptabilité de gestion agricole repose sur une <strong>double lecture</strong> de chaque flux : d'un côté <strong>par nature</strong> (de quoi il s'agit), de l'autre <strong>par destination</strong> (à quoi il sert). Cette double lecture est le fondement du modèle de données de RIDEA.</p>
+
+      <h3>Par nature — la question « quoi ? »</h3>
+      <p>Chaque charge et chaque produit est d'abord classifié selon sa nature intrinsèque, indépendamment de son usage. Les grandes natures agricoles sont :</p>
+      <ul>
+        <li><strong>Charges opérationnelles</strong> : semences, engrais, phytosanitaires, aliments du bétail, énergie, eau, produits vétérinaires, travaux par tiers.</li>
+        <li><strong>Charges de structure</strong> : fermages, assurances, entretien, comptable, amortissements du matériel et des bâtiments.</li>
+        <li><strong>Charges de main d'œuvre</strong> : salaires + charges sociales des employés, charges sociales de l'exploitant.</li>
+        <li><strong>Produits</strong> : ventes de récoltes, ventes d'animaux, ventes de lait, subventions PAC (DPB en Belgique — Droit au Paiement de Base), aides couplées wallonnes, aides environnementales (MAEC).</li>
+      </ul>
+
+      <h3>Par destination — la question « pour quoi ? »</h3>
+      <p>Chaque charge est ensuite <strong>affectée</strong> à une ou plusieurs destinations — c'est-à-dire à la branche d'activité qu'elle sert. Les grandes destinations en agriculture wallonne :</p>
+      <ul>
+        <li><strong>Cultures</strong> — chaque type de culture est un centre de coût distinct : blé, escourgeon, maïs, colza, betterave sucrière, pommes de terre, prairies temporaires.</li>
+        <li><strong>Élevages</strong> — chaque atelier animal est un centre de coût : bovins lait (forte activité wallonne), bovins viande (Ardenne), ovins, porcins, aviculture.</li>
+        <li><strong>Structure</strong> — les charges non affectables directement (comptable, assurance générale, direction).</li>
+      </ul>
+
+      <div className="expert-tip">
+        <div className="et-label">Le point clé</div>
+        Une même charge peut être affectée à plusieurs destinations. L'engrais épandu sur une parcelle en blé va au centre de coût « blé ». L'électricité de la salle de traite va au centre de coût « bovins lait ». Le salaire du chef d'exploitation qui fait à la fois du blé et de l'élevage est <strong>ventilé</strong> selon des clés de répartition — c'est ici que le modèle de données doit prévoir des <strong>règles d'affectation avec pourcentages</strong>.
+      </div>
+
+      <h2>Mouvements IN/OUT et stocks</h2>
+      <p>La fiche JD mentionne spécifiquement les <strong>mouvements IN/OUT</strong>. C'est un enjeu majeur en agriculture — cycles longs, stocks qui bougent en permanence :</p>
+      <ul>
+        <li><strong>Stocks d'intrants</strong> — engrais, semences, aliments. Achetés (IN), utilisés (OUT sur cultures/élevages).</li>
+        <li><strong>Stocks de récoltes</strong> — céréales stockées, ensilage, foin. Produits (IN), vendus ou autoconsommés (OUT).</li>
+        <li><strong>Stocks animaux</strong> — cheptel bovin, ovin, porcin. Naissances / achats (IN), ventes / abattages / mortalité (OUT).</li>
+        <li><strong>Variations d'inventaire</strong> — la différence de valeur des stocks entre le début et la fin de l'exercice comptable est un composant essentiel du résultat.</li>
+      </ul>
+
+      <h3>Indicateurs de sortie — les métriques wallonnes</h3>
+      <p>La DAEA publie plusieurs indicateurs standardisés dans son rapport annuel « État de l'Agriculture Wallonne » :</p>
+      <ul>
+        <li><strong>Marge brute par activité</strong> — produits d'une culture moins charges opérationnelles affectées.</li>
+        <li><strong>Excédent brut d'exploitation (EBE)</strong> — approche globale hors amortissements et charges financières.</li>
+        <li><strong>Revenu du travail par UT</strong> — la DAEA compare la capacité des exploitations à rémunérer la main d'œuvre.</li>
+        <li><strong>Revenu agricole</strong> — indicateur de gestion individuelle, limité à la main d'œuvre familiale.</li>
+      </ul>
+
+      <div className="call-out">
+        <div className="co-label">Transposition depuis le banking</div>
+        <p>Si vous venez de la banque : c'est <strong>exactement la même logique</strong> qu'un P&L par ligne d'activité avec des clés d'allocation. Charges par nature (informatique, immobilier, personnel) allouées par destination (business unit). Le vocabulaire change ; la mécanique est identique.</p>
+      </div>
+
+      <h2>Modélisation dans une plateforme RIDEA wallonne</h2>
+      <p>Le modèle de données doit représenter :</p>
+      <ul>
+        <li>Un <strong>plan comptable</strong> détaillé par nature de charges/produits (harmonisé au niveau du réseau DAEA).</li>
+        <li>Un <strong>référentiel de destinations</strong> (cultures, élevages, structure) — spécifique aux orientations agricoles wallonnes.</li>
+        <li>Une <strong>table d'affectation</strong> à trois entrées : (charge/produit, destination, pourcentage).</li>
+        <li>Un système de <strong>gestion de stocks</strong> avec mouvements IN/OUT datés, par unité (kg, litres, hectares, têtes).</li>
+        <li>Des <strong>règles de valorisation</strong> (coûts moyens pondérés, prix de marché, coefficients standard).</li>
+      </ul>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>Terme officiel wallon : « comptabilité de gestion agricole » (= comptabilité analytique agricole).</li>
+          <li>Double lecture des flux : par nature ET par destination.</li>
+          <li>Les destinations = branches d'activité (cultures, élevages, structure).</li>
+          <li>Ventilation possible selon des clés — impose une table d'affectation.</li>
+          <li>Mouvements IN/OUT gouvernent les stocks (intrants, récoltes, cheptel).</li>
+          <li>Indicateurs DAEA publiés : marge brute, EBE, revenu du travail/UT, revenu agricole.</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Affectez ces 6 charges à leurs destinations',
+      intro: 'Pour une exploitation wallonne mixte (blé + bovins lait), indiquez comment vous répartiriez chaque charge entre les destinations. Certaines sont mono-destination, d\'autres sont ventilées.',
+      fields: [
+        { id: 'p4_engrais', label: 'Engrais épandus sur les parcelles de blé (5000 €)', hint: 'Mono-destination ou multiple ? Avec quels %?', placeholder: 'Ex: 100% cultures / blé' },
+        { id: 'p4_alim', label: 'Aliment concentré pour vaches laitières (12000 €)', hint: 'Mono-destination ou multiple ?', placeholder: '' },
+        { id: 'p4_elec', label: 'Électricité totale (3000 €)', hint: 'Salle de traite + bâtiments de stockage + bureau', placeholder: 'Ex: 60% élevage / bovins lait, 30% cultures / stockage, 10% structure' },
+        { id: 'p4_carb', label: 'Carburant tracteur (4000 €)', hint: 'Utilisation mixte cultures + livraison lait', placeholder: '' },
+        { id: 'p4_compta', label: 'Honoraires du centre de gestion agréé (2500 €)', hint: 'Où affecter cette charge structurelle ?', placeholder: '' },
+        { id: 'p4_veterin', label: 'Frais vétérinaires (1800 €)', hint: 'Prophylaxie et soins du troupeau', placeholder: '' },
+      ],
+    },
+  },
+
+  /* --------------- PHASE 5 --------------- */
+  {
+    id: 5,
+    slug: 'flux',
+    title: 'Flux de données wallons de bout en bout',
+    subtitle: 'Depuis la saisie centre de gestion jusqu\'à la transmission à la Commission',
+    duration: '20 min',
+    output: 'Séquencement des étapes + SLAs',
+    lede: "Maintenant que vous connaissez les acteurs et les données, structurez le flux complet — quelle donnée passe par quel canal, à quelle fréquence, avec quelles transformations. Le flux wallon est plus court que le flux français (pas de couche SRISET).",
+    lesson: () => (<>
+      <h2>Vue d'ensemble du flux wallon</h2>
+      <p>Le flux RIDEA en Wallonie traverse quatre acteurs et impose des transformations à chaque étape. Voici la vue haut niveau du cycle annuel (pour un exercice comptable N clôturé) :</p>
+
+      <div className="call-out">
+        <div className="co-label">Le cycle annuel en 5 étapes</div>
+        <p><strong>1.</strong> L'exploitant clôture son exercice comptable N → <strong>2.</strong> Le centre de gestion agréé saisit la comptabilité de gestion au format DAEA (janvier-juin N+1) → <strong>3.</strong> La DAEA contrôle, valide et consolide les données wallonnes (été-automne N+1) → <strong>4.</strong> Coordination fédérale via Statbel et transmission à la Commission européenne (fin N+1) → <strong>5.</strong> Diffusion via etat-agriculture.wallonie.be, Statbel, et publications DAEA (dès N+2).</p>
+      </div>
+
+      <h2>Détail par étape</h2>
+
+      <h3>Étape 1 → 2 : Exploitant vers Centre de gestion agréé</h3>
+      <p>Flux <strong>hors plateforme RIDEA</strong> mais qui l'alimente indirectement. L'exploitant fournit ses justificatifs comptables (factures, bordereaux, extraits bancaires) à son centre de gestion agréé. Ce dernier tient la comptabilité en Plan Comptable Général puis la <strong>convertit</strong> au format DAEA/RIDEA. Le mapping entre PCG et RIDEA est un enjeu métier à part entière.</p>
+
+      <h3>Étape 2 : Saisie centre de gestion → Plateforme RIDEA</h3>
+      <p>C'est <strong>l'entrée principale</strong> dans la plateforme. Deux options techniques coexistent typiquement :</p>
+      <ul>
+        <li><strong>Saisie directe interactive</strong> — le comptable du centre de gestion se connecte à l'application web, remplit les écrans de saisie, valide. Ergonomie et contrôles côté client sont essentiels.</li>
+        <li><strong>Import de fichiers structurés</strong> — le centre de gestion exporte depuis son logiciel comptable un fichier normalisé (CSV, XML, Excel structuré) et l'importe en lot. Validations côté serveur.</li>
+      </ul>
+      <p>La plupart des plateformes proposent les deux. C'est un point à confirmer en entretien.</p>
+      <p><strong>SLA cible</strong> : les fiches doivent être remontées à la DAEA dans les mois qui suivent la clôture de l'exercice.</p>
+
+      <h3>Étape 3 : Contrôle qualité et consolidation DAEA</h3>
+      <p>La DAEA vérifie les données remontées par les centres de gestion agréés. Contrôles typiques :</p>
+      <ul>
+        <li>Cohérence entre variables (ex : les charges de fermage supposent une SAU en fermage).</li>
+        <li>Vraisemblance vs benchmarks (une marge brute négative sur une culture bien orientée demande vérification).</li>
+        <li>Détection d'anomalies statistiques (valeurs aberrantes, doublons).</li>
+        <li>Complétude de la fiche (variables obligatoires renseignées).</li>
+        <li>Application des référentiels wallons (typologies OTEX, CDEX, calcul PBS).</li>
+        <li>Extrapolation à la population wallonne (coefficients de pondération).</li>
+      </ul>
+      <p>La DAEA dispose d'outils de <strong>contrôle et de dialogue</strong> avec les centres de gestion — workflows d'aller-retour pour corriger. La plateforme doit gérer ces cycles avec versioning.</p>
+
+      <h3>Étape 4 : Coordination fédérale + Transmission Commission</h3>
+      <p>La DAEA coordonne avec <strong>Statbel</strong> pour la remontée fédérale et européenne. Format et calendrier fixés par la Commission (DG AGRI). Le format est un <strong>standard européen</strong> harmonisé pour permettre les comparaisons entre États membres.</p>
+
+      <h3>Étape 5 : Diffusion aval multicanal</h3>
+      <p>En parallèle, la DAEA diffuse :</p>
+      <ul>
+        <li><strong>etat-agriculture.wallonie.be</strong> — fiches indicateurs publiques, comparaisons interannuelles, données par région agricole wallonne et par OTEX.</li>
+        <li><strong>agriculture.wallonie.be</strong> — portail principal du secteur agricole wallon avec publications DAEA (livrets, études, rapports).</li>
+        <li><strong>Statbel</strong> — statistiques agricoles agrégées au niveau fédéral.</li>
+        <li><strong>Chercheurs</strong> — accès aux données individuelles anonymisées sous convention.</li>
+      </ul>
+
+      <div className="expert-tip">
+        <div className="et-label">Point d'architecture</div>
+        Ces canaux aval imposent des <strong>flux d'export distincts</strong> depuis la plateforme centrale, avec des règles de transformation différentes : agrégation pour etat-agriculture.wallonie.be, anonymisation pour la recherche, format européen standardisé pour la Commission. La plateforme doit prévoir un module d'export multi-format.
+      </div>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>Cycle annuel en 5 étapes : clôture N → saisie CGA → contrôle/consolidation DAEA → coordination Statbel/CE → diffusion multicanal.</li>
+          <li>Le flux wallon est plus court que le flux français (pas de couche SRISET intermédiaire).</li>
+          <li>Entrée dans la plateforme : soit saisie interactive, soit import fichier structuré. Prévoir les deux.</li>
+          <li>Sortie de la plateforme : 4 canaux distincts (etat-agriculture, agriculture.wallonie.be, Statbel, Commission européenne).</li>
+          <li>Les centres de gestion agréés sont le maillon opérationnel critique — cycles de correction avec versioning indispensables.</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Décrivez le flux étape par étape (contexte wallon)',
+      intro: 'Pour chaque étape, décrivez la transformation appliquée à la donnée et le SLA associé (délai maximal).',
+      fields: [
+        { id: 'p5_step1', label: 'Étape 1 — Exploitant → Centre de gestion agréé', hint: 'Nature de l\'échange + délai typique', textarea: true, placeholder: '' },
+        { id: 'p5_step2', label: 'Étape 2 — Centre de gestion agréé → Plateforme RIDEA', hint: 'Canal (saisie/import) + SLA', textarea: true, placeholder: '' },
+        { id: 'p5_step3', label: 'Étape 3 — Contrôle et consolidation DAEA', hint: 'Types de contrôles + gestion des corrections + extrapolation', textarea: true, placeholder: '' },
+        { id: 'p5_step4', label: 'Étape 4 — Coordination Statbel + Transmission Commission européenne', hint: 'Format + fréquence + articulation régional-fédéral', textarea: true, placeholder: '' },
+        { id: 'p5_step5', label: 'Étape 5 — Diffusion aval (etat-agriculture, agriculture.wallonie.be, Statbel, recherche)', hint: 'Différences de traitement entre canaux', textarea: true, placeholder: '' },
+      ],
+    },
+  },
+
+  /* --------------- PHASE 6 --------------- */
+  {
+    id: 6,
+    slug: 'stories',
+    title: 'Modélisation fonctionnelle',
+    subtitle: 'Écrire des user stories RIDEA-compatibles (personas wallons)',
+    duration: '30 min',
+    output: '3 user stories complètes avec critères d\'acceptation',
+    lede: "Le cœur du métier de BA : traduire un besoin en spécification implémentable. Sur un projet public à forte exigence de traçabilité, les user stories doivent porter des critères d'acceptation particulièrement rigoureux. Les personas wallons sont spécifiques.",
+    lesson: () => (<>
+      <h2>Le format INVEST + les spécificités RIDEA</h2>
+      <p>Un user story bien formé respecte les principes INVEST — Independent, Negotiable, Valuable, Estimable, Small, Testable. Sur RIDEA, deux exigences complémentaires s'y ajoutent :</p>
+      <ol>
+        <li><strong>Rattachement réglementaire</strong> — la story doit référencer explicitement le ou les articles du règlement européen, ou de la note DAEA, qui la fondent.</li>
+        <li><strong>Traçabilité amont/aval</strong> — la story doit permettre de reconstruire, en cas d'audit, la chaîne besoin → story → test → livrable → utilisation.</li>
+      </ol>
+
+      <h3>Structure recommandée d'une US RIDEA</h3>
+      <div className="call-out">
+        <div className="co-label">Format cible</div>
+        <p><strong>Titre</strong> — court, orienté fonctionnalité.<br/>
+        <strong>Contexte réglementaire</strong> — 1-2 lignes citant les textes ou notes de référence.<br/>
+        <strong>User story</strong> — En tant que <em>[rôle]</em>, je veux <em>[action]</em>, afin de <em>[bénéfice]</em>.<br/>
+        <strong>Critères d'acceptation</strong> — au format Given / When / Then, au moins 3.<br/>
+        <strong>Cas limites</strong> — 2-3 cas d'erreur ou de bord.<br/>
+        <strong>Traçabilité amont</strong> — besoin métier source (comité, atelier, note).<br/>
+        <strong>Traçabilité aval</strong> — cas de test associés, artefact livré.</p>
+      </div>
+
+      <h2>Trois rôles utilisateurs à connaître par cœur (personas wallons)</h2>
+      <p>Sur RIDEA wallon, ces trois rôles sont vos <strong>personas principaux</strong>. Sachez les nommer avec leur terminologie exacte :</p>
+      <ul>
+        <li><strong>Comptable de centre de gestion agréé</strong> — utilisateur d'un centre comme CPL-Promogest, SPIGVA ou CREPA. Il saisit ou importe les fiches. Volume élevé, rapidité d'exécution attendue.</li>
+        <li><strong>Agent DAEA</strong> — technicien ou spécialiste basé à Namur (ou une des 5 implantations). Il contrôle, valide, consolide, extrapole. Attentif à la qualité statistique.</li>
+        <li><strong>Statisticien DEMNA / Statbel</strong> — plus haut niveau, cadre coordination et transmission européenne. Vision inter-régionale et fédérale.</li>
+      </ul>
+      <p>À cela s'ajoutent des rôles secondaires : administrateur système, chercheur, exploitant (accès limité à ses propres données), agent de la Commission (via export).</p>
+
+      <h2>Exemple d'user story rigoureuse (contexte wallon)</h2>
+      <div className="call-out">
+        <div className="co-label">Exemple</div>
+        <p><strong>Titre</strong> — Saisie de l'IFT phytosanitaire à partir des intrants comptables.</p>
+        <p><strong>Contexte réglementaire</strong> — Règlement d'exécution UE 2024, annexe II variable EN.PHY.001 (IFT global). Obligation à partir de l'exercice 2026. Note DAEA du 15/03/2025.</p>
+        <p><strong>User story</strong> — En tant que <em>comptable de centre de gestion agréé</em>, je veux <em>que l'IFT soit pré-calculé à partir des consommations d'intrants phytosanitaires déjà saisies</em>, afin de <em>ne pas avoir à saisir séparément un indicateur environnemental redondant</em>.</p>
+        <p><strong>Critères d'acceptation</strong> :</p>
+        <ul>
+          <li>Étant donné une fiche avec au moins une charge de type « phytosanitaire », quand j'ouvre l'onglet Environnement, alors l'IFT est affiché pré-calculé avec le détail des ingrédients pris en compte.</li>
+          <li>Étant donné qu'aucune charge phytosanitaire n'a été saisie, quand j'ouvre l'onglet Environnement, alors l'IFT affiche « Non calculable — donnée d'entrée absente » avec un lien vers la saisie des intrants.</li>
+          <li>Étant donné un IFT pré-calculé, quand je clique « modifier », alors je peux forcer une valeur manuelle avec justification obligatoire tracée.</li>
+        </ul>
+        <p><strong>Cas limites</strong> — Produit phytosanitaire inconnu dans le référentiel wallon : afficher un message clair et permettre saisie manuelle. Consommation sur culture multi-parcelles : ventiler proportionnellement à la surface.</p>
+        <p><strong>Traçabilité amont</strong> — Atelier DAEA 15/03/2025, note de cadrage IFT v1.2.</p>
+        <p><strong>Traçabilité aval</strong> — TC-IFT-001 à TC-IFT-005, endpoint <code>GET /indicators/ift</code>.</p>
+      </div>
+
+      <h2>Pièges classiques à éviter</h2>
+      <ul>
+        <li><strong>Stories trop grosses</strong> — une story qui prend plus d'un sprint doit être découpée.</li>
+        <li><strong>Critères d'acceptation flous</strong> — « le système doit être performant » n'est pas un critère. « La liste de 500 fiches se charge en moins de 2 secondes » en est un.</li>
+        <li><strong>Manque de traçabilité amont</strong> — sur un projet public, ne pas pouvoir dire d'où vient une exigence est un risque en audit régional ou européen.</li>
+        <li><strong>Confusion story vs tâche technique</strong> — « Créer la table Postgres » n'est pas une user story.</li>
+      </ul>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>Format cible : titre + contexte réglementaire + user story + critères Given/When/Then + cas limites + traçabilité amont/aval.</li>
+          <li>Trois rôles utilisateurs principaux (Wallonie) : Comptable de centre de gestion agréé, Agent DAEA, Statisticien DEMNA/Statbel.</li>
+          <li>Toujours citer le texte réglementaire ou la note DAEA qui fonde la story.</li>
+          <li>Toujours au moins 3 critères d'acceptation format G/W/T.</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Écrivez 3 user stories pour la plateforme RIDEA wallonne',
+      intro: 'Chaque story doit inclure un titre, la persona ciblée (Comptable CGA, Agent DAEA, ou Statisticien), la story elle-même, et 2 critères d\'acceptation Given/When/Then minimum.',
+      fields: [
+        { id: 'p6_us1_title', label: 'Story 1 — Titre', hint: 'Fonctionnalité concernée', placeholder: '' },
+        { id: 'p6_us1_body', label: 'Story 1 — Corps + critères', hint: 'En tant que… je veux… afin de… + 2 critères G/W/T', textarea: true, tall: true, placeholder: '' },
+        { id: 'p6_us2_title', label: 'Story 2 — Titre', hint: '', placeholder: '' },
+        { id: 'p6_us2_body', label: 'Story 2 — Corps + critères', hint: '', textarea: true, tall: true, placeholder: '' },
+        { id: 'p6_us3_title', label: 'Story 3 — Titre', hint: '', placeholder: '' },
+        { id: 'p6_us3_body', label: 'Story 3 — Corps + critères', hint: '', textarea: true, tall: true, placeholder: '' },
+      ],
+    },
+  },
+
+  /* --------------- PHASE 7 --------------- */
+  {
+    id: 7,
+    slug: 'tracability',
+    title: 'Traçabilité et conformité (cadre belge)',
+    subtitle: 'Audit trail, RGPD belge, secret statistique',
+    duration: '25 min',
+    output: 'Modèle de matrice de traçabilité',
+    lede: "Sur un projet secteur public traitant de données personnelles et sensibles, la traçabilité et la conformité ne sont pas des ajouts : elles conditionnent l'architecture. Le cadre belge diffère du cadre français sur les autorités et certaines modalités.",
+    lesson: () => (<>
+      <h2>Trois régimes juridiques cumulatifs</h2>
+      <p>Une plateforme RIDEA wallonne est soumise à trois régimes juridiques qui se cumulent :</p>
+
+      <h3>1. RGPD + cadre belge des données personnelles</h3>
+      <p>Les exploitants sont des personnes physiques (ou des personnes morales avec dirigeants identifiés). Leur nom, adresse, données comptables individuelles, données sociales sont des données personnelles. Le RGPD impose :</p>
+      <ul>
+        <li><strong>Base légale du traitement</strong> — sur RIDEA, c'est le consentement de l'exploitant (article 6.1.a du RGPD) complété par la mission d'intérêt public (article 6.1.e).</li>
+        <li><strong>Information de la personne</strong> — l'exploitant doit être informé au moment de la collecte de la finalité, des destinataires, de la durée de conservation.</li>
+        <li><strong>Droits de la personne</strong> — accès, rectification, effacement (dans les limites du secret statistique), portabilité.</li>
+        <li><strong>Registre des traitements</strong> — le SPW-ARNE doit tenir un registre RGPD.</li>
+        <li><strong>DPO</strong> — un Délégué à la Protection des Données est désigné au SPW.</li>
+      </ul>
+      <p>Autorité de contrôle en Belgique : <strong>l'APD/GBA (Autorité de Protection des Données / Gegevensbeschermingsautoriteit)</strong>. Basée à Bruxelles. C'est elle qui traite les plaintes RGPD en Belgique — pas la CNIL française.</p>
+
+      <h3>2. Secret statistique belge</h3>
+      <p>Les données individuelles collectées pour la statistique publique sont protégées par la <strong>loi belge du 4 juillet 1962 relative à la statistique publique</strong> (modifiée à plusieurs reprises). Ce secret s'applique aux données RIDEA. Il est <strong>plus strict</strong> que le RGPD sur la diffusion — même une donnée « anonyme » peut être réidentifiante si le croisement est possible.</p>
+      <p>La règle pratique : les données individuelles ne sont accessibles que sous contraintes techniques et conventionnelles fortes (accès restreint pour la recherche, k-anonymité sur toute diffusion agrégée).</p>
+
+      <div className="call-out">
+        <div className="co-label">Le point à retenir</div>
+        <p>Le secret statistique impose une <strong>k-anonymité</strong> sur toute diffusion agrégée : une donnée régionale ne doit pas permettre de reconstituer une exploitation individuelle. Cela impose des <strong>seuils de non-diffusion</strong> — la DAEA applique typiquement un seuil de 5 exploitations minimum pour publier une moyenne. La plateforme doit gérer cette règle.</p>
+      </div>
+
+      <h3>3. Conservation des données publiques</h3>
+      <p>Les données de statistique publique ont un régime de conservation défini par la loi et les instructions du service producteur. La durée est typiquement longue (décennale voire plus) pour permettre les analyses rétrospectives. La plateforme doit gérer <strong>l'archivage à long terme</strong> et le <strong>versioning</strong> des données corrigées a posteriori.</p>
+
+      <h2>La matrice de traçabilité — outil de pilotage BA</h2>
+      <p>La matrice de traçabilité est votre outil principal de conformité <strong>et</strong> de pilotage projet. Elle permet, pour toute exigence ou toute donnée, de reconstruire la chaîne complète depuis le besoin métier jusqu'à l'artefact livré.</p>
+
+      <h3>Colonnes recommandées</h3>
+      <ol>
+        <li><strong>ID exigence</strong> — identifiant unique (EXG-001, EXG-002…).</li>
+        <li><strong>Source</strong> — d'où vient cette exigence : atelier DAEA, note DEMNA, article de règlement UE.</li>
+        <li><strong>Formulation</strong> — l'exigence en une phrase.</li>
+        <li><strong>Règle métier</strong> — identifiant BR-XXX si formalisée.</li>
+        <li><strong>User story(ies)</strong> — identifiant(s) US couvrants.</li>
+        <li><strong>Cas de test</strong> — identifiants TC-XXX.</li>
+        <li><strong>Artefact livré</strong> — endpoint API, écran, rapport.</li>
+        <li><strong>Statut</strong> — spec / dev / test / prod.</li>
+        <li><strong>Version</strong> — le versioning est indispensable (l'exigence peut évoluer).</li>
+      </ol>
+
+      <div className="expert-tip">
+        <div className="et-label">Signal important</div>
+        En mission, résistez à la tentation de considérer la matrice comme un « livrable de fin de projet ». Elle est votre <strong>tableau de bord quotidien</strong> — elle vous permet de savoir en 30 secondes où en est chaque exigence et de détecter les orphelins.
+      </div>
+
+      <h2>Audit trail applicatif — les événements à tracer</h2>
+      <p>Au-delà de la traçabilité fonctionnelle (matrice), la plateforme doit tracer techniquement :</p>
+      <ul>
+        <li><strong>Saisie/modification/suppression</strong> de chaque donnée individuelle — qui, quand, quoi, ancienne valeur, nouvelle valeur.</li>
+        <li><strong>Validation DAEA</strong> — qui a validé, quand, avec quels contrôles passés.</li>
+        <li><strong>Consolidation et extrapolation</strong> — les transformations appliquées, les coefficients utilisés.</li>
+        <li><strong>Export vers Commission / Statbel / etat-agriculture</strong> — qui a déclenché, quel périmètre, quel fichier.</li>
+        <li><strong>Corrections a posteriori</strong> — modifications apportées après validation DAEA ou après transmission européenne.</li>
+      </ul>
+      <p>La rétention de l'audit trail est typiquement <strong>plus longue</strong> que la rétention métier — souvent 10 ans.</p>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>Trois régimes cumulatifs : RGPD (autorité APD/GBA) + secret statistique belge (loi 4 juillet 1962) + conservation données publiques.</li>
+          <li>Secret statistique impose la k-anonymité sur toute diffusion agrégée (seuil typique : 5 exploitations minimum).</li>
+          <li>La matrice de traçabilité (9 colonnes) est un tableau de bord quotidien, pas un livrable final.</li>
+          <li>L'audit trail applicatif trace saisie, validation, consolidation, export, corrections — rétention 10+ ans.</li>
+          <li>Autorité de contrôle RGPD en Belgique : APD/GBA à Bruxelles (pas la CNIL).</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Concevez votre modèle de matrice de traçabilité',
+      intro: 'Documentez la structure de matrice que vous appliqueriez sur la mission, avec 2 exemples de lignes remplies.',
+      fields: [
+        { id: 'p7_cols', label: 'Colonnes de votre matrice', hint: 'Listez les colonnes retenues avec une brève définition', textarea: true, tall: true, placeholder: '' },
+        { id: 'p7_ex1', label: 'Exemple 1 de ligne remplie', hint: 'Une exigence issue de l\'article 6.1 du règlement d\'exécution', textarea: true, tall: true, placeholder: '' },
+        { id: 'p7_ex2', label: 'Exemple 2 de ligne remplie', hint: 'Une exigence issue d\'un atelier métier avec la DAEA', textarea: true, tall: true, placeholder: '' },
+        { id: 'p7_sensitive', label: 'Champs sensibles nécessitant protection renforcée', hint: 'Identifiez les catégories de données et le type de protection', textarea: true, placeholder: '' },
+      ],
+    },
+  },
+
+  /* --------------- PHASE 8 --------------- */
+  {
+    id: 8,
+    slug: 'handover',
+    title: 'Handover et pérennisation',
+    subtitle: 'Passer le relais proprement',
+    duration: '20 min',
+    output: 'Checklist de handover complète',
+    lede: "Sur une mission de 6 à 24 mois dans un contexte public, votre succession est certaine. Une passation propre = votre réputation professionnelle + la pérennité du travail livré. Cette phase clôt le parcours par la préparation du départ dès le premier jour.",
+    lesson: () => (<>
+      <h2>Le principe : documenter pendant, pas à la fin</h2>
+      <p>La tentation classique du consultant est de reporter la documentation « à la fin de la mission ». C'est une erreur : à la fin, vous êtes en fin de contrat, votre attention se porte ailleurs, et vous documentez à la va-vite. Sur un projet public, cette approche produit des passations médiocres qui pénalisent tout le monde.</p>
+      <p>La discipline efficace : <strong>documenter au fil de l'eau</strong>. Chaque atelier animé génère un compte-rendu structuré. Chaque décision prise est tracée dans Confluence. Chaque module fonctionnel spécifié a sa page de référence. Au moment du handover, il ne reste qu'à structurer la vue d'ensemble — pas à recréer la matière.</p>
+
+      <h2>Le pack de handover — 8 composants</h2>
+
+      <h3>1. Note de contexte du projet</h3>
+      <p>Court document (2-3 pages) donnant à votre successeur le contexte politique et technique : origine du projet, principaux jalons franchis, positions des parties prenantes, points sensibles. C'est ce que vous auriez aimé recevoir en arrivant.</p>
+
+      <h3>2. Cartographie des parties prenantes</h3>
+      <p>Qui est qui, qui pilote quoi, qui décide quoi. Sur RIDEA cela inclut la DAEA (avec les noms précis des interlocuteurs à Namur), les centres de gestion agréés référents (CPL-Promogest, SPIGVA, CREPA), l'équipe de développement, l'intégrateur externe s'il existe, et le comité de pilotage.</p>
+
+      <h3>3. État à date des livrables fonctionnels</h3>
+      <p>Vue Confluence structurée par module fonctionnel. Pour chaque module : spécifications validées, en cours, à venir. Fichiers, versions, propriétaires.</p>
+
+      <h3>4. Matrice de traçabilité à jour</h3>
+      <p>Comme vu en phase 7 — c'est votre tableau de bord quotidien. Elle doit être fraîche au jour du départ.</p>
+
+      <h3>5. Backlog Jira actualisé</h3>
+      <p>Toutes les user stories créées, priorisées, avec estimation à jour. Les tickets « Done » archivés proprement. Les tickets « In progress » avec propriétaire clair.</p>
+
+      <h3>6. Journal des décisions</h3>
+      <p>Registre chronologique des décisions structurantes prises pendant la mission : options envisagées, arguments, décision retenue, date, décideur. Ceci évite à votre successeur de re-débattre des points déjà tranchés.</p>
+
+      <h3>7. Registre des risques et points ouverts</h3>
+      <p>Liste actualisée des risques identifiés, avec statut (mitigé, actif, clos), et propriétaire. Liste des points ouverts qui restent en discussion, avec échéance cible.</p>
+
+      <h3>8. Plan de succession</h3>
+      <p>Le document que votre successeur lit en premier. Contient : ordre de priorité pour prendre en main la mission, personnes à rencontrer dans les 15 premiers jours, dossiers critiques à examiner, planning des rendez-vous récurrents, dates butoirs à venir dans les 3 prochains mois.</p>
+
+      <div className="expert-tip">
+        <div className="et-label">Discipline recommandée</div>
+        À la moitié de votre mission, produisez une <strong>version « à blanc »</strong> du pack de handover — comme si vous partiez demain. Cet exercice révèle instantanément les zones sous-documentées. Corrigez-les pendant que vous avez la matière fraîche en tête.
+      </div>
+
+      <h2>Les 3 semaines de recouvrement idéal</h2>
+      <p>Un handover propre suppose une période de recouvrement pendant laquelle vous êtes encore en poste mais votre successeur est déjà là. Idéalement 2 à 3 semaines. La séquence type :</p>
+      <ul>
+        <li><strong>Semaine 1</strong> : votre successeur observe. Il vous accompagne aux réunions récurrentes, lit la documentation, pose ses questions.</li>
+        <li><strong>Semaine 2</strong> : votre successeur agit sous votre supervision. Il prend la parole en réunion, produit ses premiers livrables. Vous corrigez et coachez.</li>
+        <li><strong>Semaine 3</strong> : vous observez, votre successeur pilote. Vous restez disponible pour arbitrages exceptionnels.</li>
+      </ul>
+
+      <h2>Ce qui reste après vous : la valeur pérenne</h2>
+      <p>La qualité de votre handover se mesure à un critère simple : <strong>votre successeur peut-il éviter les erreurs que vous avez évitées et bénéficier des apprentissages que vous avez accumulés ?</strong> Si oui, votre mission continue à générer de la valeur après votre départ.</p>
+
+      <div className="key-takeaways">
+        <div className="kt-label">À retenir</div>
+        <ul>
+          <li>Documenter au fil de l'eau, pas à la fin — la fin arrive toujours trop tard.</li>
+          <li>Le pack de handover a 8 composants : contexte, parties prenantes, livrables, traçabilité, backlog, décisions, risques, plan de succession.</li>
+          <li>Faites une version « à blanc » du pack à mi-mission pour détecter les zones sous-documentées.</li>
+          <li>Idéal : 2-3 semaines de recouvrement avec le successeur.</li>
+          <li>Critère de qualité : votre successeur peut-il capitaliser sur vos apprentissages ?</li>
+        </ul>
+      </div>
+    </>),
+    activity: {
+      title: 'Bâtissez votre checklist de handover',
+      intro: 'Auto-évaluez-vous sur les 6 critères d\'un handover réussi. Cette checklist vous sert de guide pendant toute la mission.',
+      checklist: [
+        { id: 'p8_c1', label: 'Note de contexte du projet documentée en Confluence, à jour', crit: true },
+        { id: 'p8_c2', label: 'Cartographie des parties prenantes à jour (DAEA + centres de gestion + partenaires)', crit: true },
+        { id: 'p8_c3', label: 'Matrice de traçabilité tenue au fil de l\'eau, revue mensuellement', crit: true },
+        { id: 'p8_c4', label: 'Journal des décisions maintenu avec date + argumentation', crit: false },
+        { id: 'p8_c5', label: 'Registre des risques actualisé trimestriellement', crit: false },
+        { id: 'p8_c6', label: 'Plan de succession rédigé (version à blanc à mi-mission)', crit: true },
+      ],
+      fields: [
+        { id: 'p8_reflect', label: 'Réflexion finale', hint: 'Un principe que vous retenez de RIDEAForge pour l\'appliquer à cette mission', textarea: true, tall: true, placeholder: '' },
+      ],
+    },
+  },
+];
+
+
+/* ============ COMPONENTS ============ */
+
+const ProgressBar = ({ completed, total }) => (
+  <div className="top-progress">
+    <span>{completed}/{total} phases</span>
+    <div className="bar"><div className="bar-fill" style={{ width: `${(completed/total)*100}%` }} /></div>
+  </div>
+);
+
+const Sidebar = ({ phases, activeIdx, completed, onSelect }) => {
+  const isUnlocked = (idx) => idx === 0 || completed.includes(phases[idx-1].id);
+  const isDone = (idx) => completed.includes(phases[idx].id);
+  return (
+    <aside className="sidebar">
+      <div className="side-heading">Parcours en 8 phases</div>
+      {phases.map((p, idx) => {
+        const unlocked = isUnlocked(idx);
+        const done = isDone(idx);
+        const active = idx === activeIdx;
+        return (
+          <div key={p.id}
+            className={`phase-item ${active ? 'active' : ''} ${done ? 'done' : ''} ${!unlocked ? 'locked' : ''}`}
+            onClick={() => unlocked && onSelect(idx)}
+          >
+            <div className="phase-num">{done ? '✓' : p.id}</div>
+            <div className="phase-body">
+              <div className="phase-title">{p.title}</div>
+              <div className="phase-sub">{p.subtitle}</div>
+            </div>
+            {!unlocked && <div className="lock-icon">🔒</div>}
+          </div>
+        );
+      })}
+      <div className="side-heading" style={{ marginTop: 20 }}>À propos</div>
+      <div style={{ padding: '8px 12px', fontSize: 11, color: 'var(--ink-3)', lineHeight: 1.6 }}>
+        RIDEAForge v0.1 — parcours d'onboarding BA pour projet public agricole RIDEA / RICA. Sauvegarde automatique dans le navigateur.
+      </div>
+    </aside>
+  );
+};
+
+const Welcome = ({ onStart }) => (
+  <div className="welcome">
+    <div className="breadcrumb">RIDEAFORGE <span className="b-sep">/</span> <span className="b-current">Bienvenue</span></div>
+    <h1>Un parcours BA pour maîtriser RIDEA en 3 heures</h1>
+    <p className="welcome-lede">
+      Huit phases séquentielles, chacune combinant une leçon substantielle et une activité pratique.
+      Chaque phase produit un artefact concret que vous conservez pour votre mission.
+      Impossible d'accéder à la phase suivante sans avoir validé la précédente — la progression est verrouillée par conception, comme dans un vrai apprentissage.
+    </p>
+    <div className="welcome-features">
+      <div className="welcome-feature">
+        <h4>Séquentiel</h4>
+        <p>Chaque phase construit sur la précédente. Aucun raccourci — le contexte réglementaire précède la modélisation, qui précède la traçabilité.</p>
+      </div>
+      <div className="welcome-feature">
+        <h4>Pédagogique</h4>
+        <p>Chaque phase enseigne avant de demander. Vocabulaire, patterns, points de vigilance sont explicités pour former durablement.</p>
+      </div>
+      <div className="welcome-feature">
+        <h4>Persistant</h4>
+        <p>Votre travail est sauvegardé automatiquement dans le navigateur. Reprenez où vous vous êtes arrêté, jour après jour.</p>
+      </div>
+    </div>
+    <button className="btn btn-primary" onClick={onStart}>
+      Commencer la Phase 1 →
+    </button>
+    <div className="footer-note">
+      RIDEAForge v0.1 · SFL Consulting · Application personnelle de préparation à une mission Data Analyst RIDEA
+    </div>
+  </div>
+);
+
+const ApiKeyDialog = ({ currentKey, onSave, onCancel }) => {
+  const [key, setKey] = useState(currentKey || '');
+  return (
+    <div className="dialog-overlay">
+      <div className="dialog">
+        <h3>Activer le mode Live API</h3>
+        <p className="dialog-sub">
+          Le mode Live envoie vos travaux à l'API Anthropic Claude pour obtenir un feedback IA. Votre clé API est stockée <strong>uniquement dans votre navigateur</strong> (localStorage) et n'est jamais transmise ailleurs qu'à Anthropic. Vous pouvez la supprimer à tout moment en réinitialisant l'application.
+        </p>
+        <label className="field-label">Clé API Anthropic</label>
+        <div className="field-hint">Obtenir une clé sur console.anthropic.com — format : sk-ant-…</div>
+        <input
+          type="password"
+          className="input"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder="sk-ant-…"
+          autoFocus
+        />
+        <div className="dialog-actions">
+          <button className="btn-outline" onClick={onCancel}>Annuler</button>
+          <button className="btn-solid" onClick={() => onSave(key.trim())} disabled={!key.trim().startsWith('sk-')}>
+            Activer Live
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const FeedbackPanel = ({ apiMode, apiKey, phase, data }) => {
+  const [state, setState] = useState({ status: 'idle', text: '' });
+  const requestFeedback = async () => {
+    setState({ status: 'loading', text: '' });
+    if (apiMode === 'mock') {
+      setTimeout(() => setState({ status: 'done', text: MOCK_FEEDBACK(phase) }), 500);
+      return;
+    }
+    try {
+      const prompt = buildFeedbackPrompt(phase, data);
+      const result = await callClaudeAPI(apiKey, prompt);
+      setState({ status: 'done', text: result });
+    } catch (e) {
+      setState({ status: 'error', text: `Erreur : ${e.message}` });
+    }
+  };
+  const rendered = state.text.split(/\n\n+/).map((p, i) => <p key={i}>{p}</p>);
+  return (
+    <div className="feedback-panel">
+      <div className="fp-label">
+        <span>💬</span> Feedback IA sur mon travail
+        <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--ink-3)' }}>
+          Mode : {apiMode === 'live' ? 'Live (API Claude)' : 'Mock (sans appel)'}
+        </span>
+      </div>
+      {state.status === 'idle' && (
+        <>
+          <p style={{ color: 'var(--ink-2)', fontSize: 13 }}>
+            Obtenez un retour structuré sur vos réponses de la phase. En mode Mock, un feedback générique s'affiche ; en mode Live, l'API Claude analyse votre travail précis.
+          </p>
+          <button className="feedback-btn" onClick={requestFeedback}>
+            Demander un feedback
+          </button>
+        </>
+      )}
+      {state.status === 'loading' && <div className="fp-loading">Analyse en cours…</div>}
+      {state.status === 'done' && (
+        <>
+          {rendered}
+          <button className="feedback-btn" onClick={requestFeedback}>
+            Redemander un feedback
+          </button>
+        </>
+      )}
+      {state.status === 'error' && (
+        <>
+          <p style={{ color: 'var(--danger)' }}>{state.text}</p>
+          <button className="feedback-btn" onClick={requestFeedback}>Réessayer</button>
+        </>
+      )}
+    </div>
+  );
+};
+
+const PhaseView = ({ phase, phaseIdx, totalPhases, data, onChange, onComplete, onNav, isCompleted, apiMode, apiKey }) => {
+  const [showToast, setShowToast] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
+
+  const handleFieldChange = (fieldId, value) => {
+    onChange(fieldId, value);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 1500);
+  };
+
+  const validate = () => {
+    const errs = [];
+    if (phase.activity.fields) {
+      phase.activity.fields.forEach(f => {
+        const val = data[f.id];
+        if (!val || val.trim().length < 8) errs.push(f.label);
+      });
+    }
+    if (phase.activity.matrix) {
+      phase.activity.matrix.items.forEach(item => {
+        const dimKey = `${item.id}_dim`;
+        const srcKey = `${item.id}_src`;
+        if (!data[dimKey] || !data[srcKey]) errs.push(item.label);
+      });
+    }
+    if (phase.activity.checklist) {
+      const critMissing = phase.activity.checklist.filter(c => c.crit && !data[c.id]);
+      if (critMissing.length > 0) errs.push(`Critères critiques : ${critMissing.map(c => c.label).join(', ')}`);
+    }
+    return errs;
+  };
+
+  const handleComplete = () => {
+    const errs = validate();
+    if (errs.length > 0) {
+      setValidationErrors(errs);
+      return;
+    }
+    setValidationErrors([]);
+    onComplete();
+  };
+
+  const renderActivity = () => {
+    const a = phase.activity;
+    return (
+      <div className="activity">
+        <h2>{a.title}</h2>
+        <p className="activity-intro">{a.intro}</p>
+
+        {a.fields && (
+          <div className="activity-form">
+            {a.fields.map(f => (
+              <div key={f.id} className="field-block">
+                <label className="field-label">
+                  {f.label}
+                  <span className="req">*</span>
+                </label>
+                {f.hint && <div className="field-hint">{f.hint}</div>}
+                {f.textarea ? (
+                  <textarea
+                    className={`textarea ${f.tall ? 'tall' : ''}`}
+                    value={data[f.id] || ''}
+                    onChange={(e) => handleFieldChange(f.id, e.target.value)}
+                    placeholder={f.placeholder}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    className="input"
+                    value={data[f.id] || ''}
+                    onChange={(e) => handleFieldChange(f.id, e.target.value)}
+                    placeholder={f.placeholder}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {a.matrix && (
+          <div className="activity-form">
+            {a.matrix.items.map(item => (
+              <div key={item.id} className="item-card">
+                <div className="item-card-head">
+                  <div>
+                    <div className="item-card-title">{item.label}</div>
+                    <div className="item-card-sub">Classifiez cet indicateur</div>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <div className="field-label" style={{ marginBottom: 6 }}>Dimension</div>
+                  <div className="radio-group">
+                    {a.matrix.dimensions.map(d => (
+                      <div key={d}
+                        className={`radio-chip ${data[`${item.id}_dim`] === d ? 'selected' : ''}`}
+                        onClick={() => handleFieldChange(`${item.id}_dim`, d)}
+                      >{d}</div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="field-label" style={{ marginBottom: 6 }}>Source</div>
+                  <div className="radio-group">
+                    {a.matrix.sources.map(s => (
+                      <div key={s}
+                        className={`radio-chip ${data[`${item.id}_src`] === s ? 'selected' : ''}`}
+                        onClick={() => handleFieldChange(`${item.id}_src`, s)}
+                      >{s}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {a.checklist && (
+          <div className="activity-form">
+            <div className="checkbox-group">
+              {a.checklist.map(c => (
+                <div key={c.id}
+                  className={`checkbox-row ${data[c.id] ? 'checked' : ''}`}
+                  onClick={() => handleFieldChange(c.id, !data[c.id])}
+                >
+                  <input type="checkbox" checked={!!data[c.id]} readOnly />
+                  <div className="cb-text">
+                    {c.label}
+                    {c.crit && <span style={{ color: 'var(--danger)', marginLeft: 6, fontSize: 11 }}>(critique)</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {a.fields && a.fields.map(f => (
+              <div key={f.id} className="field-block" style={{ marginTop: 20 }}>
+                <label className="field-label">{f.label}<span className="req">*</span></label>
+                {f.hint && <div className="field-hint">{f.hint}</div>}
+                <textarea
+                  className={`textarea ${f.tall ? 'tall' : ''}`}
+                  value={data[f.id] || ''}
+                  onChange={(e) => handleFieldChange(f.id, e.target.value)}
+                  placeholder={f.placeholder}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <div className="breadcrumb">
+        RIDEAFORGE <span className="b-sep">/</span> PHASE {phase.id} <span className="b-sep">/</span> <span className="b-current">{phase.title}</span>
+      </div>
+      <div className="phase-hero">
+        <div className="hero-num">{phase.id}</div>
+        <div className="subtitle">{phase.subtitle}</div>
+        <h1>{phase.title}</h1>
+        <p className="lede">{phase.lede}</p>
+        <div className="meta">
+          <span>⏱ Durée estimée : <strong>{phase.duration}</strong></span>
+          <span>📄 Livrable : <strong>{phase.output}</strong></span>
+        </div>
+      </div>
+
+      <div className="lesson">
+        <span className="section-eyebrow">Leçon · à lire d'abord</span>
+        {phase.lesson()}
+      </div>
+
+      {renderActivity()}
+
+      <FeedbackPanel apiMode={apiMode} apiKey={apiKey} phase={phase} data={data} />
+
+      {validationErrors.length > 0 && (
+        <div className="call-out" style={{ background: '#FCE7F3', borderColor: 'var(--danger)', borderLeftColor: 'var(--danger)' }}>
+          <div className="co-label" style={{ color: 'var(--danger)' }}>Champs à compléter</div>
+          <p>Pour valider cette phase, complétez :</p>
+          <ul>
+            {validationErrors.slice(0, 5).map((e, i) => <li key={i}>{e}</li>)}
+          </ul>
+        </div>
+      )}
+
+      <div className={`completion-panel ${isCompleted ? 'completion-done' : ''}`}>
+        {isCompleted ? (
+          <>
+            <h3>✓ Phase {phase.id} validée</h3>
+            <p>Vous avez terminé cette phase. Vos réponses sont sauvegardées. Passez à la phase suivante pour continuer votre apprentissage.</p>
+            {phaseIdx < totalPhases - 1 && (
+              <button className="btn btn-primary" onClick={() => onNav(phaseIdx + 1)}>
+                Phase {phase.id + 1} →
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <h3>Prêt à valider cette phase ?</h3>
+            <p>Vérifiez que vous avez complété l'ensemble de l'activité. Une fois validée, la phase suivante se déverrouille et vos réponses sont enregistrées définitivement (vous pouvez toujours les réviser plus tard).</p>
+            <button className="btn btn-primary" onClick={handleComplete}>
+              Marquer la Phase {phase.id} comme terminée
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="nav-bar">
+        <button className="btn btn-nav" onClick={() => onNav(phaseIdx - 1)} disabled={phaseIdx === 0}>
+          ← Phase précédente
+        </button>
+        <button
+          className="btn btn-nav"
+          onClick={() => onNav(phaseIdx + 1)}
+          disabled={phaseIdx === totalPhases - 1 || !isCompleted}
+        >
+          Phase suivante →
+        </button>
+      </div>
+
+      {showToast && <div className="save-toast show">💾 Sauvegardé</div>}
+    </div>
+  );
+};
+
+/* ============ APP ROOT ============ */
+function App() {
+  const [state, setState] = useState(() => loadState());
+  const [showWelcome, setShowWelcome] = useState(state.completed.length === 0 && !state.data['p1_program']);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showImportMenu, setShowImportMenu] = useState(false);
+  const [showApiDialog, setShowApiDialog] = useState(false);
+  const fileInputRef = React.useRef(null);
+  const fileInputJSONRef = React.useRef(null);
+  const fileInputExcelRef = React.useRef(null);
+
+  useEffect(() => { saveState(state); }, [state]);
+
+  const activePhase = PHASES[state.activePhase];
+
+  const handleDataChange = (fieldId, value) => {
+    setState(s => ({ ...s, data: { ...s.data, [fieldId]: value } }));
+  };
+  const handleComplete = () => {
+    setState(s => ({
+      ...s,
+      completed: s.completed.includes(activePhase.id) ? s.completed : [...s.completed, activePhase.id],
+    }));
+  };
+  const handleNav = (newIdx) => {
+    if (newIdx < 0 || newIdx >= PHASES.length) return;
+    setState(s => ({ ...s, activePhase: newIdx }));
+    window.scrollTo(0, 0);
+  };
+  const handleReset = () => {
+    if (confirm('Réinitialiser toute votre progression RIDEAForge ? Vos réponses seront perdues (y compris votre clé API).')) {
+      localStorage.removeItem(STORAGE_KEY);
+      setState(defaultState);
+      setShowWelcome(true);
+    }
+  };
+  const handleImportCSV = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = importCSVData(text);
+      const merged = { ...state.data, ...imported };
+      setState(s => ({ ...s, data: merged }));
+      alert(`Import CSV réussi. ${Object.keys(imported).length} champs mis à jour.`);
+    } catch (err) {
+      alert(`Erreur d'import CSV : ${err.message}`);
+    }
+    e.target.value = '';
+  };
+  const handleImportJSON = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = importJSONData(text);
+      const meta = imported.exportedAt ? ` (export du ${new Date(imported.exportedAt).toLocaleString('fr-BE')})` : '';
+      const summary = `Import JSON détecté${meta}.\n\n` +
+        `• Phase active : ${imported.activePhase + 1}/${PHASES.length}\n` +
+        `• Phases complétées : ${imported.completed.length}\n` +
+        `• Champs remplis : ${Object.keys(imported.data).length}\n` +
+        `• Version source : ${imported.version}\n\n` +
+        `Cet import va REMPLACER complètement votre état actuel. Continuer ?`;
+      if (confirm(summary)) {
+        setState(s => ({
+          ...s,
+          activePhase: imported.activePhase,
+          completed: imported.completed,
+          data: imported.data,
+        }));
+        setShowWelcome(false);
+        alert('État restauré depuis le fichier JSON.');
+      }
+    } catch (err) {
+      alert(`Erreur d'import JSON : ${err.message}`);
+    }
+    e.target.value = '';
+  };
+  const handleImportExcel = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const imported = await importFromExcel(file);
+      const meta = imported.exportedAt ? ` (export du ${new Date(imported.exportedAt).toLocaleString('fr-BE')})` : '';
+      const summary = `Import Excel détecté${meta}.\n\n` +
+        `• Phases marquées terminées : ${imported.completed.length}\n` +
+        `• Champs remplis : ${Object.keys(imported.data).length}\n` +
+        `• Version source : ${imported.version}\n\n` +
+        `Cet import va REMPLACER complètement votre état actuel (progression, complétions, saisies). Continuer ?`;
+      if (confirm(summary)) {
+        setState(s => ({
+          ...s,
+          activePhase: imported.activePhase,
+          completed: imported.completed,
+          data: imported.data,
+        }));
+        setShowWelcome(false);
+        alert(`État restauré depuis le workbook Excel. ${imported.completed.length} phases marquées terminées, ${Object.keys(imported.data).length} champs importés.`);
+      }
+    } catch (err) {
+      alert(`Erreur d'import Excel : ${err.message}`);
+    }
+    e.target.value = '';
+  };
+
+  return (
+    <div className="app">
+      <div className="topbar">
+        <div className="brand">
+          <div className="brand-mark">R</div>
+          <span className="brand-name">RIDEAForge</span>
+          <span className="brand-tag">Parcours BA · RIDEA Wallonie · v0.2</span>
+        </div>
+        <div className="spacer"></div>
+        <ProgressBar completed={state.completed.length} total={PHASES.length} />
+        <div className="toolbar">
+          <div className={`mode-toggle ${state.apiMode}`} onClick={() => {
+            if (state.apiMode === 'mock') { setShowApiDialog(true); }
+            else { setState(s => ({ ...s, apiMode: 'mock' })); }
+          }}>
+            <div className="dot"></div>
+            <span>{state.apiMode === 'live' ? 'API : Live' : 'API : Mock'}</span>
+          </div>
+        </div>
+        <input type="file" accept=".csv" className="file-input-hidden" ref={fileInputRef} onChange={handleImportCSV} />
+        <input type="file" accept=".json,application/json" className="file-input-hidden" ref={fileInputJSONRef} onChange={handleImportJSON} />
+        <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="file-input-hidden" ref={fileInputExcelRef} onChange={handleImportExcel} />
+        <div className="export-menu">
+          <button className="icon-btn" onClick={() => { setShowImportMenu(v => !v); setShowExportMenu(false); }}>Importer ▾</button>
+          {showImportMenu && (
+            <div className="export-dropdown" onMouseLeave={() => setShowImportMenu(false)}>
+              <div className="hint">Source</div>
+              <button onClick={() => { fileInputExcelRef.current?.click(); setShowImportMenu(false); }}>Excel (workbook complet)</button>
+              <button onClick={() => { fileInputJSONRef.current?.click(); setShowImportMenu(false); }}>JSON (état complet)</button>
+              <button onClick={() => { fileInputRef.current?.click(); setShowImportMenu(false); }}>CSV (fusion champs)</button>
+            </div>
+          )}
+        </div>
+        <div className="export-menu">
+          <button className="icon-btn" onClick={() => { setShowExportMenu(v => !v); setShowImportMenu(false); }}>Exporter ▾</button>
+          {showExportMenu && (
+            <div className="export-dropdown" onMouseLeave={() => setShowExportMenu(false)}>
+              <div className="hint">Format</div>
+              <button onClick={() => { exportExcel(state, PHASES); setShowExportMenu(false); }}>Excel (workbook complet)</button>
+              <button onClick={() => { exportJSON(state); setShowExportMenu(false); }}>JSON (état complet)</button>
+              <button onClick={() => { exportCSV(state, PHASES); setShowExportMenu(false); }}>CSV (round-trip atelier)</button>
+              <button onClick={() => { exportMarkdown(state, PHASES); setShowExportMenu(false); }}>Markdown (compte-rendu)</button>
+              <div className="divider"></div>
+              <button onClick={() => { window.print(); setShowExportMenu(false); }}>Imprimer / PDF</button>
+            </div>
+          )}
+        </div>
+        <button className="icon-btn" onClick={handleReset}>Réinitialiser</button>
+      </div>
+      {showApiDialog && (
+        <ApiKeyDialog
+          currentKey={state.apiKey}
+          onSave={(key) => { setState(s => ({ ...s, apiKey: key, apiMode: 'live' })); setShowApiDialog(false); }}
+          onCancel={() => setShowApiDialog(false)}
+        />
+      )}
+      <div className="shell">
+        <Sidebar
+          phases={PHASES}
+          activeIdx={state.activePhase}
+          completed={state.completed}
+          onSelect={(idx) => { setShowWelcome(false); handleNav(idx); }}
+        />
+        <main className="main">
+          {showWelcome ? (
+            <Welcome onStart={() => setShowWelcome(false)} />
+          ) : (
+            <PhaseView
+              phase={activePhase}
+              phaseIdx={state.activePhase}
+              totalPhases={PHASES.length}
+              data={state.data}
+              onChange={handleDataChange}
+              onComplete={handleComplete}
+              onNav={handleNav}
+              isCompleted={state.completed.includes(activePhase.id)}
+              apiMode={state.apiMode}
+              apiKey={state.apiKey}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
